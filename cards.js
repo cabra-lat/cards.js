@@ -1,3 +1,5 @@
+const swapKeysWithValues = obj => Object.fromEntries(Object.entries(obj).map(a => a.reverse()))
+
 export class CardsJS {
   static STANDARD = 0
   static EUCHRE   = 1
@@ -15,6 +17,30 @@ export class CardsJS {
       deck[j] = tempi
     }
   }
+  static compareByRank(cardA, cardB) {
+    return cardA.rank - cardB.rank;
+  }
+
+  static compareBySuit(cardA, cardB) {
+    return cardA.owner.order[cardA.suit]
+         - cardA.owner.order[cardB.suit]
+  }
+
+  // Static comparator for descending rank
+  static compareBySuitThenRank(cardA, cardB) {
+    if (cardA.suit !== cardB.suit) {
+       return Card.compareBySuit(cardA, cardB)
+    }
+    return Card.compareByRank(cardA, cardB)
+  }
+
+  // Static comparator for descending rank
+  static compareByRankThenSuit(cardA, cardB) {
+    if (cardA.rank !== cardB.rank) {
+       return Card.compareByRank(cardA, cardB)
+    }
+    return Card.compareBySuit(cardA, cardB)
+  }
   static circularLayout(decks, x, y, a, b = a, skipIndex = -1, initialAngle = 0.0, finalAngle = 2 * Math.PI, percent = 1.0) {
      const positions = []
      const angleStep = (finalAngle - initialAngle) / decks.length * percent
@@ -22,7 +48,7 @@ export class CardsJS {
        const angle = initialAngle + index * angleStep
        const newX = x + a * Math.cos(angle)
        const newY = y + b * Math.sin(angle)
- 
+
        if (index === skipIndex) {
          positions.unshift({ deck, x: newX, y: newY })
        } else {
@@ -55,6 +81,8 @@ export class CardsJS {
     }
     Object.assign(this, this.defaults)
     Object.assign(this, options)
+    this.order = Object.fromEntries(this.suits.map((suit, index) => [suit, index]));
+
 
     this.zIndexCounter = 1
     this.start = 1
@@ -130,7 +158,7 @@ export class CardsJS {
   }
 }
 
-class Card {
+export class Card {
   constructor (suit, rank, owner) {
     this.owner = owner
     this.shortName = suit + rank
@@ -173,31 +201,35 @@ class Card {
     this.el.style.top = y - (this.owner.cardHeight / 2)
     this.el.style.left = x - (this.owner.cardWidth / 2)
     setTimeout(() => { callback(); this.el.style.transition = ''}, speed)
+    return this
   }
 
   rotate (angle, speed = this.owner.animationSpeed, callback = () => {}) {
     this.el.style.transition = `transform ${speed}ms`
     this.el.style.transform = `rotate(${angle}deg)`
     setTimeout(() => { callback(); this.el.style.transition = ''}, speed)
+    return this
   }
 
   showCard () {
-    const f = obj => Object.fromEntries(Object.entries(obj).map(a => a.reverse()))
-    const offsets = { ...f(this.owner.suits), rj: 2, bj: 3 }
+    const offsets = { ...swapKeysWithValues(this.owner.suits), rj: 2, bj: 3 }
     // Aces high must work as well.
     const rank = (this.rank === 14) ? 1 : this.rank
     const xpos = -rank * this.owner.cardWidth
     const ypos = -offsets[this.suit] * this.owner.cardHeight
     this.el.style.backgroundPosition = `${xpos}px ${ypos}px`
+    return this
   }
 
   hideCard () {
     const y = this.owner.cardback === 'red' ? 0 * this.owner.cardHeight : -1 * this.owner.cardHeight
     this.el.style.backgroundPosition = `0px ${y}px`
+    return this
   }
 
   moveToFront () {
     this.el.style.zIndex = this.owner.zIndexCounter++
+    return this
   }
 }
 
@@ -217,8 +249,32 @@ class Container extends Array {
     }
   }
 
+  // Sort the cards in the deck
+  sort(compare = CardsJS.compareBySuit, descending = false) {
+    // Factory function for ascending or descending comparison
+    const comparator = (compareFn) =>
+      descending
+        ? (a, b) => compareFn(b, a) // Reverse order for descending
+        : (a, b) => compareFn(a, b); // Default order
+
+    // Choose the appropriate comparator
+    switch (compare) {
+      case 'suit':
+        return super.sort(comparator(CardsJS.compareBySuit));
+      case 'rank':
+        return super.sort(comparator(CardsJS.compareByRank));
+      case 'suit-then-rank':
+        return super.sort(comparator(CardsJS.compareBySuitThenRank));
+      case 'rank-then-suit':
+        return super.sort(comparator(CardsJS.compareByRankThenSuit));
+      default:
+        return super.sort(comparator(compare));
+    }
+  }
+
   addCard (card) {
     this.addCards([card])
+    return this;
   }
 
   addCards (cards) {
@@ -230,6 +286,7 @@ class Container extends Array {
       this.push(card)
       card.container = this
     }
+    return this
   }
 
   removeCard (card) {
@@ -243,12 +300,10 @@ class Container extends Array {
   }
 
   // Update label text
-  setLabel (text) {
-    this.label.text = text
-    if (this.label.el) {
-      this.label.el.innerText = text
-      this.updateLabel()
-    }
+  setLabel (options) {
+    this.label.text = options.text
+    this.updateLabel(options.sticky)
+    return this
   }
 
   topCard () {
@@ -400,9 +455,16 @@ class Deck extends Container {
     super(options)
   }
 
+  sort (options) {
+    super.sort(options)
+    this.render(options)
+    return this
+  }
+
   shuffle (options) {
     CardsJS.shuffle(this)
     this.render(options)
+    return this
   }
 
   deal (count, hands, speed, callback) {
@@ -425,6 +487,7 @@ class Deck extends Container {
       i++
     }
     dealOne()
+    return this;
   }
 
   calcPosition () {
