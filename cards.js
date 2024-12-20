@@ -29,17 +29,17 @@ export class CardsJS {
   // Static comparator for descending rank
   static compareBySuitThenRank(cardA, cardB) {
     if (cardA.suit !== cardB.suit) {
-       return Card.compareBySuit(cardA, cardB)
+       return CardJS.compareBySuit(cardA, cardB)
     }
-    return Card.compareByRank(cardA, cardB)
+    return CardJS.compareByRank(cardA, cardB)
   }
 
   // Static comparator for descending rank
   static compareByRankThenSuit(cardA, cardB) {
     if (cardA.rank !== cardB.rank) {
-       return Card.compareByRank(cardA, cardB)
+       return CardJS.compareByRank(cardA, cardB)
     }
-    return Card.compareBySuit(cardA, cardB)
+    return CardJS.compareBySuit(cardA, cardB)
   }
   static circularLayout(decks, x, y, a, b = a, skipIndex = -1, initialAngle = 0.0, finalAngle = 2 * Math.PI, percent = 1.0) {
      const positions = []

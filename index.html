@@ -227,14 +227,14 @@ alert('Deck sorted by rank!');
 <code id="ex10" class="language-javascript">
 // Sort the deck
 deck.shuffle()
-    .sort('rank');
+    .sort(CardsJS.compareBySuitThenRank);
 alert('Deck sorted by rank, then suit!');
 </code>
 
 <code id="ex11" class="language-javascript">
 // Sort the deck
-deck.shuffle();
-deck.sort(CardsJS.compareByRankThenSuit);
+deck.shuffle()
+    .sort(CardsJS.compareByRankThenSuit);
 alert('Deck sorted by rank, then suit!');
 </code>
 
