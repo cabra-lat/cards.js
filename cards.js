@@ -418,7 +418,7 @@ class Container extends Array {
     let padV = this.padding.vertical
     let padH = this.padding.horizontal
     let H = this.owner.cardHeight
-    let V = this.owner.cardWidth
+    let W = this.owner.cardWidth
     let cards = this.length
 
     switch(sticky) {
