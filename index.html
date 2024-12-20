@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>cards.js - Write card games in Javascript</title>
+    <script type="module" src="cards.js"></script>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+<script>
+    hljs.configure({ cssSelector: 'code' })
+    hljs.highlightAll();
+</script>
+  </head>
+
+  <script type="module">
+    import { CardsJS } from './cards.js'
+
+    class Example {
+      constructor() {
+        this.counter = 0
+        this.codes = Array.from(document.querySelectorAll('code[id^="ex"]'))
+        this.examples = this.codes.length
+        this.prevButton = document.getElementById('prev')
+        this.nextButton = document.getElementById('next')
+        this.prevButton.addEventListener('click', this.prev)
+        this.nextButton.addEventListener('click', this.next)
+        this.variables = {} // Store variables in an object for proper scoping
+        this.execute()
+        this.stateChange()
+      }
+
+      stateChange = () => {
+        // Update button states
+        this.prevButton.disabled = this.counter === 0
+        this.nextButton.disabled = this.counter === this.examples - 1
+
+        // Show the current code block
+        this.codes.forEach((code) => code.classList.remove('visible'))
+        this.codes[this.counter].classList.add('visible')
+        document.getElementById('console').classList.add('visible')
+      }
+
+      next = () => {
+        this.counter++
+        this.execute()
+        this.stateChange()
+      }
+
+      prev = () => {
+        this.counter--
+        this.stateChange()
+      }
+
+      execute = async () => {
+        let code = this.codes[this.counter].innerText;
+
+        // Find all declared variables
+        const matches = code.matchAll(/let (\w+)/gm);
+        for (const match of matches) {
+          this.variables[match[1]] = null; // Initialize variables in the scope
+        }
+
+        // Replace "let" variables with this.variableName to scope them
+        Object.keys(this.variables).forEach((varName) => {
+          code = code.replaceAll('let ', '');
+          code = code.replaceAll(`${varName}`, `this.${varName}`)
+        })
+
+        let alert = (string) => {
+           document.getElementById('code-label').innerHTML = string.replaceAll('this.','')
+        }
+
+        let show = (string) => {
+           document.getElementById('console').innerHTML = string.replaceAll('this.','')
+        }
+
+        try {
+          // Evaluate the code within the class context
+          const result = eval(code)
+          this.stateChange()
+          if (result) show(result)
+        } catch (err) {
+          show('Error executing code: ' + err.message + '\n' + err.stack);
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const example = new Example()
+    });
+  </script>
+  <header>
+  <h1>Cards.js</h1>
+  <h3>The easiest way to write card games in Javascript</h3>
+  <p>
+    cards.js is a library to write good-looking card games in Javascript. It's not a framework; 
+    it focuses on rendering playing cards, animating them, and providing a simple interface for use in your games.
+  </p>
+  </header>
+
+  <!-- Navigation Buttons -->
+  <div id="buttons">
+    <button id="prev" disabled>Previous</button>
+    <button id="next" disabled>Next</button>
+  </div>
+
+  <!-- Example Code Blocks and Card Table aligned side by side -->
+  <div class="container">
+
+    <div id="card-table"></div> <!-- Card Table -->
+    <div>
+        <h3 id="code-label"></h3>
+
+<code id="ex1" class="visible language-javascript">
+// Initialize the library and create a new deck
+let cards = new CardsJS({ table: '#card-table' });
+let deck = cards.Deck();
+// Add all cards to the deck
+deck.addCards(cards.all);
+// Render deck on the table
+deck.render({ immediate: true });
+</code>
+    
+<code id="ex2" class="language-javascript">
+// Create two hands, one face-down...
+let upper = cards.Deck({
+  y: 50,
+  type: 'hand'
+});
+//... and one face-up!
+let lower = cards.Deck({
+  y: 350,
+  faceUp: true,
+  type: 'hand'
+});
+// Deal 5 cards to each hand
+deck.deal(5, [upper, lower], 50);
+alert('Created two hands!');
+</code>
+
+<code id="ex3" class="language-javascript">
+// Setup a click handler to draw cards from the deck
+deck.click((card) => {
+  if (card === deck.topCard()) {
+    lower.addCard(deck.topCard());
+    lower.render();
+  }
+});
+alert('Try clicking the deck now!');
+</code>
+    
+<code id="ex4" class="language-javascript">
+// Move the deck and set up a discard pile
+deck.x -= 50;
+deck.render();
+let pile = cards.Deck({ faceUp: true });
+pile.x += 50;
+deck.render({
+  callback: () => {
+    pile.addCard(deck.topCard());
+    pile.render();
+  },
+});
+</code>
+
+<code id="ex5" class="language-javascript">
+// Allow sending cards to the discard pile
+lower.click((card) => {
+  const top = pile.topCard()
+  if (card.suit === top.suit ||
+      card.rank === top.rank) {
+    pile.addCard(card);
+    pile.render();
+  }
+});
+</code>
+
+<code id="ex6" class="language-javascript">
+// Flip the deck face-up
+deck.faceUp = true;
+deck.render();
+alert('Deck flipped face-up!');
+</code>
+
+<code id="ex7" class="language-javascript">
+// Get cards back to main deck
+const speed = 200;
+upper.deal(-1, [deck], speed, () => {
+  alert("Upper returned its cards")
+  lower.deal(-1, [deck], speed, () => {
+    alert("Lower returned its cards")
+    pile.deal(-1, [deck], speed, () => {
+      alert("Returned all cards!")
+    })
+  })
+})
+</code>
+
+<code id="ex8" class="language-javascript">
+// Shuffle the deck
+deck.shuffle();
+alert('Deck shuffled!');
+</code>
+
+<code id="ex9" class="language-javascript">
+const radius = 200
+const names = ['You', 'Joel', 'Ana', 'Paul', 'Alice', 'Bob']
+const layout = CardsJS.circularLayout(names, deck.x, deck.y, radius)
+const players = layout.map(
+({ x, y },i) => cards.Deck({
+    x, y,
+    faceUp: i === 0, // Show 'You' hand
+    label: names[i],
+    sticky: 'top'
+  })
+)
+deck.deal(-1, players, 100,
+  () => alert("Dealt cards to players!")
+)
+</code>
+
+<code id="console" class="visible language-none">
+</code>
+    </div>
+  </div>
+</body>

@@ -1,23 +1,4 @@
-(() => {
-  function calcLayout (deck, a, b = a, skipIndex = -1, initialAngle = 0.0, finalAngle = 2 * Math.PI, percent = 1.0) {
-    const positions = []
-    const angleStep = (finalAngle - initialAngle) / cards.length * percent
-    deck.forEach((card, index) => {
-      const angle = initialAngle + index * angleStep
-      const x = cards.x + a * Math.cos(angle)
-      const y = cards.y + b * Math.sin(angle)
-
-      if (index === skipIndex) {
-        positions.unshift({ card, x, y })
-      } else {
-        positions.push({ card, x, y })
-      }
-    })
-    return positions
-  }
-})
-
-class CardsJS {
+export class CardsJS {
   static STANDARD = 0
   static EUCHRE   = 1
   static PINOCHLE = 2
@@ -33,6 +14,22 @@ class CardsJS {
       deck[i] = tempj
       deck[j] = tempi
     }
+  }
+  static circularLayout(decks, x, y, a, b = a, skipIndex = -1, initialAngle = 0.0, finalAngle = 2 * Math.PI, percent = 1.0) {
+     const positions = []
+     const angleStep = (finalAngle - initialAngle) / decks.length * percent
+     decks.forEach((deck, index) => {
+       const angle = initialAngle + index * angleStep
+       const newX = x + a * Math.cos(angle)
+       const newY = y + b * Math.sin(angle)
+ 
+       if (index === skipIndex) {
+         positions.unshift({ deck, x: newX, y: newY })
+       } else {
+         positions.push({ deck, x: newX, y: newY })
+       }
+     })
+     return positions
   }
   constructor ( options = {} ) {
     // The global options
@@ -91,14 +88,19 @@ class CardsJS {
       this.table.style.position = 'relative'
     }
 
+    this.center = {
+      x: this.table.offsetWidth / 2,
+      y: this.table.offsetHeight / 2
+    }
+
     this.all = [] // All the cards created.
 
     for (let l = 0; l < this.loop; l++) {
-      for (let i = this.start; i <= this.end; i++) {
-        this.suits.forEach(suit => {
+      this.suits.forEach(suit => {
+        for (let i = this.start; i <= this.end; i++) {
           this.all.push(new Card(suit, i, this))
-        })
-      }
+        }
+      })
     }
     if (this.blackJoker) {
       this.all.push(new Card('bj', 0, this))
@@ -106,9 +108,6 @@ class CardsJS {
     if (this.redJoker) {
       this.all.push(new Card('rj', 0, this))
     }
-
-    CardsJS.shuffle(this.all)
-
 
     // Add event listeners to all card elements
     document.querySelectorAll('.card').forEach(cardElement => {
@@ -126,8 +125,7 @@ class CardsJS {
     return {
       all: this.all,
       Deck: (options = {}) => new Deck({ ...options, owner: this }),
-      ...this.defaults,
-      ...options
+      ...this
     }
   }
 }
@@ -208,15 +206,13 @@ class Container extends Array {
   constructor ( options = {} ) {
     super()
     this.owner = options.owner
-    this.x = options.x || this.owner.table.offsetWidth / 2
-    this.y = options.y || this.owner.table.offsetHeight / 2
+    this.x = options.x || this.owner.center.x
+    this.y = options.y || this.owner.center.y
     this.faceUp = options.faceUp
-    this.padding = (options.padding)
-          ? this.owner.paddingPresets[options.padding] || options.padding
-          : this.owner.paddingPresets.pile
+    this.padding = this.owner.paddingPresets?.[options.type] || options.padding || this.owner.paddingPresets.pile
     this.label = {
       text: options.label?.text || options.label || '',
-      sticky: options.label?.sticky || 'bottom',
+      sticky: options.label?.sticky || options.sticky || 'bottom',
       el: null
     }
   }
@@ -404,6 +400,11 @@ class Deck extends Container {
     super(options)
   }
 
+  shuffle (options) {
+    CardsJS.shuffle(this)
+    this.render(options)
+  }
+
   deal (count, hands, speed, callback) {
     const me = this
     let i = 0
@@ -437,5 +438,3 @@ class Deck extends Container {
     }
   }
 }
-
-export { CardsJS };
