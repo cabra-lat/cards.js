@@ -34,19 +34,21 @@
 
       stateChange = () => {
         // Update button states
-        this.prevButton.disabled = this.counter >= 0 && !this.ended
+        this.prevButton.disabled = this.counter === 0
         this.nextButton.disabled = this.counter === this.examples - 1
-        if (this.nextButton.disabled) this.ended = true
 
         // Show the current code block
         this.codes.forEach((code) => code.classList.remove('visible'))
         this.codes[this.counter].classList.add('visible')
+        if (this.console.innerText === '')
+          this.console.classList.remove('visible')
       }
 
       next = () => {
         this.counter++
         this.execute()
         this.stateChange()
+        this.console.innerText === ''
       }
 
       prev = () => {
@@ -75,15 +77,16 @@
         }
 
         let show = (string) => {
-           this.console.innerHTML = string.replaceAll('this.','')
-           this.console.classList.add('visible')
+           if (string) {
+             this.console.innerHTML = string.toString().replaceAll('this.','')
+             this.console.classList.add('visible')
+           }
         }
 
         try {
           // Evaluate the code within the class context
-          const result = eval(code)
+          eval(code)
           this.stateChange()
-          if (result) show(result)
         } catch (err) {
           show('Error executing code: ' + err.message + '\n' + err.stack);
         }
@@ -112,9 +115,10 @@
   <!-- Example Code Blocks and Card Table aligned side by side -->
   <div class="container">
 
-    <div id="card-table"></div> <!-- Card Table -->
+    <div id="card-table">
+      <h3 id="code-label"></h3>
+    </div>
     <div class="code-container">
-        <h3 id="code-label"></h3>
 
 <code id="ex1" class="visible language-javascript">
 // Initialize the library and create a new deck
@@ -214,13 +218,15 @@ alert('Deck shuffled!');
 
 <code id="ex8" class="language-javascript">
 // Sort the deck
-deck.sort(CardsJS.compareBySuit); // by suit
+deck.shuffle()
+    .sort(CardsJS.compareBySuit); // by suit
 alert('Deck sorted by suit!');
 </code>
 
 <code id="ex9" class="language-javascript">
 // Sort the deck
-deck.sort(CardsJS.compareByRank);
+deck.shuffle()
+    .sort(CardsJS.compareByRank);
 alert('Deck sorted by rank!');
 </code>
 
@@ -228,7 +234,7 @@ alert('Deck sorted by rank!');
 // Sort the deck
 deck.shuffle()
     .sort(CardsJS.compareBySuitThenRank);
-alert('Deck sorted by rank, then suit!');
+alert('Deck sorted by suit, then rank!');
 </code>
 
 <code id="ex11" class="language-javascript">
@@ -242,12 +248,13 @@ alert('Deck sorted by rank, then suit!');
 const r = 150     // radius
 const cx = cards.center.x // center X
 const cy = cards.center.y // center Y
-let names = ['Alice','Bob','Charlie','Denise']
+let names = ['You','Alice','Bob','Charlie']
 let layout = CardsJS.circularLayout(names, cx, cy, r)
 let players = layout.map(
 ({ x, y },i) => cards.Deck({
     x, y,
-    faceUp: i === 0, // Show 'You' hand
+    faceUp: i === 0,
+    label: names[i]
   })
 )
 alert("Dealing cards...")
@@ -256,16 +263,8 @@ deck.deal(-1, players, 100,
 )
 </code>
 
-<code id="ex13" class="language-javascript">
-for (let i=0; i < names.length; ++i) {
-  players[i].setLabel({ text: names[i] })
-  players[i].render({ immediate: true })
-}
-alert("Showing their names!")
-</code>
+<code id="console" class="visible language-none"></code>
 
-<code id="console" class="visible language-none">
-</code>
     </div>
   </div>
 </body>

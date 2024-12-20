@@ -29,17 +29,17 @@ export class CardsJS {
   // Static comparator for descending rank
   static compareBySuitThenRank(cardA, cardB) {
     if (cardA.suit !== cardB.suit) {
-       return CardJS.compareBySuit(cardA, cardB)
+       return CardsJS.compareBySuit(cardA, cardB)
     }
-    return CardJS.compareByRank(cardA, cardB)
+    return CardsJS.compareByRank(cardA, cardB)
   }
 
   // Static comparator for descending rank
   static compareByRankThenSuit(cardA, cardB) {
     if (cardA.rank !== cardB.rank) {
-       return CardJS.compareByRank(cardA, cardB)
+       return CardsJS.compareByRank(cardA, cardB)
     }
-    return CardJS.compareBySuit(cardA, cardB)
+    return CardsJS.compareBySuit(cardA, cardB)
   }
   static circularLayout(decks, x, y, a, b = a, skipIndex = -1, initialAngle = 0.0, finalAngle = 2 * Math.PI, percent = 1.0) {
      const positions = []
@@ -311,7 +311,7 @@ class Container extends Array {
   }
 
   toString () {
-    return 'Container'
+    return `[Container ${this.map(({shortName}) => shortName).join(" ")}]`
   }
 
   click (func, context) {
@@ -499,5 +499,9 @@ class Deck extends Container {
       this[i].targetTop = top + i * this.padding.vertical
       this[i].targetLeft = left + i * this.padding.horizontal
     }
+  }
+
+  toString () {
+    return super.toString().replace('Container','Deck')
   }
 }
