@@ -75,11 +75,6 @@ button {
    max-height: 100px;
 }
 
-#code-label {
-  position: relative;
-  top: -60px;
-}
-
 code {
   border: dotted 1px black;
   width: 100% !important;

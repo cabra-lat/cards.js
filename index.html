@@ -18,24 +18,40 @@
 
     class Example {
       constructor() {
-        this.counter = 0
         this.codes = Array.from(document.querySelectorAll('code[id^="ex"]'))
+        this.table = document.getElementById('card-table')
+        this.label = document.getElementById('code-label')
         this.console = document.getElementById('console')
         this.examples = this.codes.length
         this.prevButton = document.getElementById('prev')
         this.nextButton = document.getElementById('next')
+        this.resetButton = document.getElementById('reset')
         this.prevButton.addEventListener('click', this.prev)
         this.nextButton.addEventListener('click', this.next)
-        this.variables = {} // Store variables in an object for proper scoping
+
+        this.stateReset()
         this.execute()
-        this.stateChange()
-        this.ended = false
+
+        this.resetButton.addEventListener('click', () => {
+           this.table.replaceChildren();
+           this.stateReset()
+           this.execute()
+        })
+      }
+
+      stateReset = () => {
+         this.variables = {}
+         this.counter = 0
+         this.maxSeen = 0
+         this.ended = false
       }
 
       stateChange = () => {
         // Update button states
-        this.prevButton.disabled = this.counter === 0
+        this.prevButton.disabled = this.counter <= 0
         this.nextButton.disabled = this.counter === this.examples - 1
+        if (this.nextButton.disabled) this.ended = true
+        this.resetButton.disabled = this.counter === 0
 
         // Show the current code block
         this.codes.forEach((code) => code.classList.remove('visible'))
@@ -46,14 +62,15 @@
 
       next = () => {
         this.counter++
-        this.execute()
+        this.maxSeen = Math.max(this.counter, this.maxSeen)
+        if (!this.ended && this.counter >= this.maxSeen)
+          this.execute()
         this.stateChange()
         this.console.innerText === ''
       }
 
       prev = () => {
         this.counter--
-        this.execute()
         this.stateChange()
       }
 
@@ -68,17 +85,18 @@
 
         // Replace "let" variables with this.variableName to scope them
         Object.keys(this.variables).forEach((varName) => {
-          code = code.replaceAll('let ', '');
-          code = code.replaceAll(`${varName}`, `this.${varName}`)
+          code = code.replaceAll('let ', '')
+          code = code.replaceAll(`${varName}`, `this.variables.${varName}`)
         })
 
         let alert = (string) => {
-           document.getElementById('code-label').innerHTML = string.replaceAll('this.','')
+           this.label.innerHTML = string.replaceAll(/this\.variables\./gm,'')
         }
 
         let show = (string) => {
            if (string) {
-             this.console.innerHTML = string.toString().replaceAll('this.','')
+             this.console.innerHTML = string.toString()
+                                            .replaceAll(/this\.variables\./gm,'')
              this.console.classList.add('visible')
            }
         }
@@ -89,6 +107,7 @@
           this.stateChange()
         } catch (err) {
           show('Error executing code: ' + err.message + '\n' + err.stack);
+          console.log(code.toString())
         }
       }
     }
@@ -109,14 +128,16 @@
   <!-- Navigation Buttons -->
   <div id="buttons">
     <button id="prev" disabled>Previous</button>
+    <button id="reset" disabled>Reset</button>
     <button id="next" disabled>Next</button>
   </div>
+
+    <h3 id="code-label"></h3>
 
   <!-- Example Code Blocks and Card Table aligned side by side -->
   <div class="container">
 
     <div id="card-table">
-      <h3 id="code-label"></h3>
     </div>
     <div class="code-container">
 
