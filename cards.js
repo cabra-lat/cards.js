@@ -1,10 +1,9 @@
-const swapKeysWithValues = obj => Object.fromEntries(Object.entries(obj).map(a => a.reverse()))
-
 export class CardsJS {
-  static STANDARD = 0
-  static EUCHRE   = 1
-  static PINOCHLE = 2
-  static NUMBERS  = 3
+  static STANDARD = 'standard'
+  static EUCHRE   = 'euchre'
+  static PINOCHLE = 'pinochle'
+  static NUMBERS  = 'numbers'
+  static FIGURES  = 'figures'
   static shuffle (deck) {
     // Fisher yates shuffle
     let i = deck.length
@@ -22,8 +21,7 @@ export class CardsJS {
   }
 
   static compareBySuit(cardA, cardB) {
-    return cardA.owner.order[cardA.suit]
-         - cardA.owner.order[cardB.suit]
+    return cardA.suitIndex - cardB.suitIndex
   }
 
   // Static comparator for descending rank
@@ -57,57 +55,83 @@ export class CardsJS {
      })
      return positions
   }
-  constructor ( options = {} ) {
+
+   static acesHigh(defaultOrder) {
+     // [1, 2, 3, ..., 13] -> [14, 2, 3, ..., 13]
+     defaultOrder.shift()
+     const max = Math.max(...defaultOrder)
+     defaultOrder.unshift(max + 1)
+     return defaultOrder
+   }
+
+   static generateRanks(ranks = 13) {
+      // The default ranks: [1, 2, 3, ..., # ranks]
+      return [...Array(ranks+1).keys()].slice(1)
+   }
+
+   static generateSuits(suits = 4) {
+      // The default ranks: [1, 2, 3, ..., # ranks]
+      return [...Array(suits).keys()]
+   }
+
+   static paddingPresets = {
+     pile:   { vertical: 1,            horizontal:  1 },
+     column: { vertical: 18 * 94 / 69, horizontal:  0 },
+     hand:   { vertical: 0,            horizontal: 18 },
+     deck:   { vertical: 0,            horizontal:  0 }
+   }
+
+   constructor ( options = {} ) {
     // The global options
-    this.defaults = {
+    const defaults = {
       cardWidth: 69,
       cardHeight: 94,
-      paddingPresets: {
-          pile:   { vertical: 1,            horizontal:  1 },
-          column: { vertical: 18 * 94 / 69, horizontal:  0 },
-          hand:   { vertical: 0,            horizontal: 18 },
-          deck:   { vertical: 0,            horizontal:  0 }
-      },
       animationSpeed: 500,
       suits: ['s', 'd', 'c', 'h'],
-      table: 'body',
+      ranks: CardsJS.generateRanks(13),
+      jokers: ['rj', 'bj'],
+      suitsOrder: suits => suits,
+      ranksOrder: ranks => ranks,
+      filter: () => true,
+      loop: 1,
       cardback: 'red',
-      acesHigh: false,
       cardsUrl: 'img/cards.png',
-      blackJoker: false,
-      redJoker: false,
-      type: CardsJS.STANDARD,
-      loop: 1
     }
-    Object.assign(this, this.defaults)
-    Object.assign(this, options)
-    this.order = Object.fromEntries(this.suits.map((suit, index) => [suit, index]));
 
+    Object.assign(defaults, options)
+    Object.assign(this, defaults)
 
+    this.suitsAndJokers = [...this.suits, ...this.jokers]
+    this.offsets = [ ...this.suits.map((_,i) => i), 2, 3 ]
     this.zIndexCounter = 1
-    this.start = 1
-    this.end = this.start + 12
 
     switch (this.type) {
       case CardsJS.STANDARD:
-        this.acesHigh = false
-        this.start = this.acesHigh ? 2 : 1
-        this.end = this.start + 12
         break
       case CardsJS.EUCHRE:
-        this.start = 9
-        this.end = this.start + 5
-        break
+        this.ranksOrder = CardsJS.acesHigh
+        this.filter = rank => rank >= 9 && rank <= 9 + 5
       case CardsJS.PINOCHLE:
-        this.start = 9
-        this.end = this.start + 5
         this.loop = 2
         break
       case CardsJS.NUMBERS:
-        this.start = 1
-        this.end = this.start + 9
+        this.filter = rank => rank >= 1 && rank <= 10
+        break
+      case CardsJS.FIGURES:
+        this.filter = rank => rank >= 10 && rank <= 13
+        this.blackJoker = true
+        this.redJoker = true
+        break
     }
-    this.length = this.loop * (this.end - this.start)
+
+    // filter unused cards, if specified
+    this.ranks = this.ranks.filter(this.filter)
+    // ranks the ranks order, if specified
+    this.ranks = this.ranksOrder(this.ranks)
+    // ranks the suits order
+    this.suits = this.suitsOrder(this.suits)
+
+    this.length = this.loop * this.ranks.length * this.suits.length
 
     this.table = document.querySelector(this.table); // Get the table element
 
@@ -123,19 +147,16 @@ export class CardsJS {
 
     this.all = [] // All the cards created.
 
-    for (let l = 0; l < this.loop; l++) {
-      this.suits.forEach(suit => {
-        for (let i = this.start; i <= this.end; i++) {
-          this.all.push(new Card(suit, i, this))
-        }
+    for (let _ = 0; _ < this.loop; ++_) {
+      this.ranks.forEach((rank,index) => {
+        this.suits.forEach(suit => {
+          this.all.push(new Card(suit, rank, this))
+        })
       })
     }
-    if (this.blackJoker) {
-      this.all.push(new Card('bj', 0, this))
-    }
-    if (this.redJoker) {
-      this.all.push(new Card('rj', 0, this))
-    }
+
+    if (this.blackJoker) this.all.push(new Card('bj', 0, this))
+    if (this.redJoker) this.all.push(new Card('rj', 0, this))
 
     // Add event listeners to all card elements
     document.querySelectorAll('.card').forEach(cardElement => {
@@ -164,6 +185,8 @@ export class Card {
     this.shortName = suit + rank
     this.suit = suit
     this.rank = rank
+    this.rankIndex = owner.ranks.indexOf(this.rank)
+    this.suitIndex = owner.suitsAndJokers.indexOf(this.suit)
     this.name = suit.toUpperCase() + rank
     this.faceUp = false
 
@@ -212,11 +235,9 @@ export class Card {
   }
 
   showCard () {
-    const offsets = { ...swapKeysWithValues(this.owner.suits), rj: 2, bj: 3 }
-    // Aces high must work as well.
-    const rank = (this.rank === 14) ? 1 : this.rank
-    const xpos = -rank * this.owner.cardWidth
-    const ypos = -offsets[this.suit] * this.owner.cardHeight
+    const offset = this.owner.offsets[this.suitIndex]
+    const xpos = - (this.rankIndex + 1) * this.owner.cardWidth
+    const ypos = - offset * this.owner.cardHeight
     this.el.style.backgroundPosition = `${xpos}px ${ypos}px`
     return this
   }
@@ -241,7 +262,9 @@ class Container extends Array {
     this.x = options.x || this.owner.center.x
     this.y = options.y || this.owner.center.y
     this.faceUp = options.faceUp
-    this.padding = this.owner.paddingPresets?.[options.type] || options.padding || this.owner.paddingPresets.pile
+    this.padding = CardsJS.paddingPresets?.[options.type]
+                 || options.padding
+                 || CardsJS.paddingPresets.pile
     this.label = {
       text: options.label?.text || options.label || '',
       sticky: options.label?.sticky || options.sticky || 'bottom',

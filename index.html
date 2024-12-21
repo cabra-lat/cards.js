@@ -121,8 +121,21 @@
     <div class="code-container">
 
 <code id="ex1" class="visible language-javascript">
+// Let's design a game based on Crazy 8's
+let config = {
+  // 13 cards, plus 2 wildcards
+  ranks: CardsJS.generateRanks(13 + 2),
+  // The suits are colors
+  suits: ['R', 'G', 'B', 'Y'],
+  ranksOrder: CardsJS.acesHigh,
+  // Custom artwork
+  cardsUrl: 'img/cards_custom.png'
+}
+</code>
+
+<code id="ex1" class="visible language-javascript">
 // Initialize the library and create a new deck
-let cards = new CardsJS({ table: '#card-table' });
+let cards = new CardsJS({ table: '#card-table', ...config });
 let deck = cards.Deck();
 // Add all cards to the deck
 deck.addCards(cards.all);
@@ -180,7 +193,8 @@ lower.click((card) => {
     deck.addCard(card)
   } else {
     if (card.suit === top.suit ||
-        card.rank === top.rank) {
+        card.rank === top.rank ||
+        card.rank > 13 ) {
       pile.addCard(card);
     }
   }
@@ -216,35 +230,35 @@ deck.shuffle();
 alert('Deck shuffled!');
 </code>
 
-<code id="ex8" class="language-javascript">
+<code id="ex9" class="language-javascript">
 // Sort the deck
 deck.shuffle()
     .sort(CardsJS.compareBySuit); // by suit
 alert('Deck sorted by suit!');
 </code>
 
-<code id="ex9" class="language-javascript">
+<code id="ex10" class="language-javascript">
 // Sort the deck
 deck.shuffle()
     .sort(CardsJS.compareByRank);
 alert('Deck sorted by rank!');
 </code>
 
-<code id="ex10" class="language-javascript">
+<code id="ex11" class="language-javascript">
 // Sort the deck
 deck.shuffle()
     .sort(CardsJS.compareBySuitThenRank);
 alert('Deck sorted by suit, then rank!');
 </code>
 
-<code id="ex11" class="language-javascript">
+<code id="ex12" class="language-javascript">
 // Sort the deck
 deck.shuffle()
     .sort(CardsJS.compareByRankThenSuit);
 alert('Deck sorted by rank, then suit!');
 </code>
 
-<code id="ex12" class="language-javascript">
+<code id="ex13" class="language-javascript">
 const r = 150     // radius
 const cx = cards.center.x // center X
 const cy = cards.center.y // center Y
