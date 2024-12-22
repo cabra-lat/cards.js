@@ -63,7 +63,7 @@ button {
   font-size: 16px;
 }
 
-#card-table {
+div #card-table, cards-js {
   background-color: green;
   height: var(--height);
   width: var(--width);

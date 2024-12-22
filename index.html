@@ -19,7 +19,6 @@
     class Example {
       constructor() {
         this.codes = Array.from(document.querySelectorAll('code[id^="ex"]'))
-        this.table = document.getElementById('card-table')
         this.label = document.getElementById('code-label')
         this.console = document.getElementById('console')
         this.examples = this.codes.length
@@ -33,6 +32,7 @@
         this.execute()
 
         this.resetButton.addEventListener('click', () => {
+           this.table = document.querySelector('cards-js')
            this.table.replaceChildren();
            this.stateReset()
            this.execute()
@@ -132,8 +132,7 @@
 
     <div class="code-container">
 
-    <div id="card-table">
-    </div>
+    <cards-js id="#cards-js"> </cards-js>
 
     <div id="buttons">
       <button id="prev" disabled>Previous</button>
@@ -145,7 +144,7 @@
 
     <div class="code-container">
 
-<code id="ex1" class="visible language-javascript">
+<code id="ex0" class="visible language-javascript">
 // Let's design a game based on Crazy 8's
 let config = {
   // 13 cards, plus 2 wildcards
@@ -159,7 +158,7 @@ let config = {
 
 <code id="ex1" class="visible language-javascript">
 // Initialize the library and create a new deck
-let cards = new CardsJS({ table: '#card-table', ...config });
+let cards = new CardsJS({ ...config });
 let deck = cards.Deck()
 deck.addCards(cards.all);
 deck.render({ immediate: true });
@@ -170,18 +169,19 @@ deck.render({ immediate: true });
 let upper = cards.Deck({
   label: 'Upper Hand',
   sticky: 'right',
-  y: cards.cardWidth / 2,
+  y: cards.playableArea.top,
   type: 'hand'
 });
 //... and one face-up!
 let lower = cards.Deck({
   label: 'Lower Hand',
   sticky: 'left',
-  y: cards.table.top - cards.cardWidth,
+  y: cards.playableArea.bottom,
   faceUp: true,
-  type: 'hand'
+  type: 'hand',
+  seenFrom: 'right'
 });
-deck.setLabel('Main Deck')
+deck.label.update({ text: 'Main Deck' })
 deck.render()
 // Deal 5 cards to each hand
 deck.deal(5, [upper, lower], 50);
@@ -238,7 +238,7 @@ lower.click((card) => {
 Array.from([deck, upper, lower, pile]).forEach(it => {
   // Flip it up up
   it.faceUp = true;
-  it.label.visible = false;
+  it.label.update({ visible: false });
   it.render();
 })
 alert('Deck flipped face-up!');
@@ -253,6 +253,7 @@ upper.deal(-1, [deck], speed, () => {
     alert("Lower returned its cards")
     pile.deal(-1, [deck], speed, () => {
       deck.x += 50
+      deck.changePerspective('south')
       deck.render()
       alert("Returned all cards!")
     })
@@ -296,12 +297,10 @@ alert('Deck sorted by rank, then suit!');
 
 <code id="ex13" class="language-javascript">
 const r = 150     // radius
-const cx = cards.center.x // center X
-const cy = cards.center.y // center Y
 let names = ['You','Alice','Bob','Charlie']
 let position = ['left','top','right','bottom']
 let perspective = ['east', 'south', 'west', 'north']
-let layout = CardsJS.roundLayout(names, cx, cy, { radius: r })
+let layout = CardsJS.roundLayout(names, { ...cards.getCenter(), radius: r })
 let players = layout.map(
 ({ x, y },i) => cards.Deck({
     x, y,
