@@ -287,7 +287,7 @@ class Container extends Array {
       y = owner.center.y,
       faceUp = false,
       type = 'pile',
-      seenFrom = 'south',
+      seenFrom = 'southEast',
       label = '',
       sticky = 'bottom'
   } = {}) {
