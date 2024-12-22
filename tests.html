@@ -152,6 +152,7 @@ let config = {
   ranks: CardsJS.generateRanks(13 + 2),
   // The suits are colors
   suits: ['R', 'G', 'B', 'Y'],
+  ranksOrder: CardsJS.acesHigh,
   // Custom artwork
   cardsUrl: 'img/cards_custom.png'
 }
@@ -159,156 +160,50 @@ let config = {
 
 <code id="ex1" class="visible language-javascript">
 // Initialize the library and create a new deck
-let cards = new CardsJS({ table: '#card-table', ...config });
-let deck = cards.Deck()
+let cards = new CardsJS({ copies: 16, table: '#card-table', ...config });
+let deck = cards.Deck({ seenFrom: 'above' })
 deck.addCards(cards.all);
 deck.render({ immediate: true });
 </code>
 
-<code id="ex2" class="language-javascript">
-// Create two hands, one face-down...
-let upper = cards.Deck({
-  label: 'Upper Hand',
-  sticky: 'right',
-  y: cards.cardWidth / 2,
-  type: 'hand'
-});
-//... and one face-up!
-let lower = cards.Deck({
-  label: 'Lower Hand',
-  sticky: 'left',
-  y: cards.table.top - cards.cardWidth,
-  faceUp: true,
-  type: 'hand'
-});
-deck.setLabel('Main Deck')
-deck.render()
-// Deal 5 cards to each hand
-deck.deal(5, [upper, lower], 50);
-alert('Created two hands!');
-</code>
+<code id="ex0" class="visible language-javascript">
+// Initialize the library and create a new deck
+let cards = new CardsJS({ table: '#card-table', ...config });
+let labels = ['left', 'top', 'bottom', 'right']
+let povs = Object.keys(CardsJS.perspective)
 
-<code id="ex3" class="language-javascript">
-// Setup a click handler to draw cards from the deck
-deck.click((card) => {
-  if (card === deck.topCard()) {
-    lower.addCard(deck.topCard());
-    lower.render();
-  }
-});
-alert('Try clicking the deck now!');
-</code>
-
-<code id="ex4" class="language-javascript">
-// Move the deck and set up a discard pile
-deck.x -= 50;
-let pile = cards.Deck({
-  label: 'discard',
-  sticky: 'top',
-  faceUp: true
-});
-pile.x += 50;
-deck.render({
-  callback: () => {
-    pile.addCard(deck.topCard());
-    pile.render();
-  },
-});
-</code>
-
-<code id="ex5" class="language-javascript">
-// Allow sending cards to the discard pile
-lower.click((card) => {
-  const top = pile.topCard()
-  if (!top) {
-    deck.addCard(card)
-  } else {
-    if (card.suit === top.suit ||
-        card.rank === top.rank ||
-        card.rank > 13 ) {
-      pile.addCard(card)
-    }
-  }
-  deck.render()
-  pile.render()
-});
-</code>
-
-<code id="ex6" class="language-javascript">
-Array.from([deck, upper, lower, pile]).forEach(it => {
-  // Flip it up up
-  it.faceUp = true;
-  it.label.visible = false;
-  it.render();
-})
-alert('Deck flipped face-up!');
-</code>
-
-<code id="ex7" class="language-javascript">
-// Get cards back to main deck
-const speed = 200;
-upper.deal(-1, [deck], speed, () => {
-  alert("Upper returned its cards")
-  lower.deal(-1, [deck], speed, () => {
-    alert("Lower returned its cards")
-    pile.deal(-1, [deck], speed, () => {
-      deck.x += 50
-      deck.render()
-      alert("Returned all cards!")
+let players = labels.reduce((acc, label, i) => {
+  return [...acc, ...povs.map((side, j) => {
+    const W = cards.cardWidth
+    const H = cards.cardHeight 
+    return cards.Deck({
+      x: i * (W + W) + W / 2,
+      y: j * (H + H) + H / 2,
+      label: label + ', ' + side, 
+      seenFrom: side, sticky: label
     })
-  })
-})
-</code>
+  })]
+}, [])
 
-<code id="ex8" class="language-javascript">
-// Shuffle the deck
-deck.shuffle();
-alert('Deck shuffled!');
-</code>
+console.log(players)
 
-<code id="ex9" class="language-javascript">
-// Sort the deck
-deck.shuffle()
-    .sort(CardsJS.compareBySuit); // by suit
-alert('Deck sorted by suit!');
-</code>
-
-<code id="ex10" class="language-javascript">
-// Sort the deck
-deck.shuffle()
-    .sort(CardsJS.compareByRank);
-alert('Deck sorted by rank!');
-</code>
-
-<code id="ex11" class="language-javascript">
-// Sort the deck
-deck.shuffle()
-    .sort(CardsJS.compareBySuitThenRank);
-alert('Deck sorted by suit, then rank!');
-</code>
-
-<code id="ex12" class="language-javascript">
-// Sort the deck
-deck.shuffle()
-    .sort(CardsJS.compareByRankThenSuit);
-alert('Deck sorted by rank, then suit!');
+deck.deal(-1, players, 10)
 </code>
 
 <code id="ex13" class="language-javascript">
 const r = 150     // radius
 const cx = cards.center.x // center X
 const cy = cards.center.y // center Y
-let names = ['You','Alice','Bob','Charlie']
-let position = ['left','top','right','bottom']
-let perspective = ['east', 'south', 'west', 'north']
-let layout = CardsJS.roundLayout(names, cx, cy, { radius: r })
-let players = layout.map(
+let others = ['Alice','Bob','Charlie']
+let players = ['You', ...others]
+let layout = CardsJS.circularLayout(players, cx, cy, r)
+let hands = layout.map(
 ({ x, y },i) => cards.Deck({
     x, y,
     faceUp: i === 0,
     label: names[i],
-    sticky: position[i],
-    seenFrom: perspective[i]
+    sticky: 
+    direction: 'northEast'
   })
 )
 alert("Dealing cards...")

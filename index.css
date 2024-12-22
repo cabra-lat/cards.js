@@ -1,7 +1,8 @@
 :root {
    --width: 400px;
-   --height: 400px;
+   --height: var(--width);
 }
+
 html {
   background-color: #092E20;
 }
@@ -17,11 +18,14 @@ body {
   padding: 30px;
 }
 
+.label {
+  text-wrap: nowrap;
+}
+
 .container {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  align-items: center;
   gap: 20px;
 }
 
@@ -48,12 +52,13 @@ p {
 
 #buttons {
   text-align: center;
-  margin: 40px 0px;
+  width: 100%;
+  display: flex;
 }
 
 button {
   height: 40px;
-  width: 120px;
+  width: 28%;
   margin: 10px;
   font-size: 16px;
 }
@@ -65,6 +70,7 @@ button {
   border: solid 6px brown;
   border-radius: 8px;
   box-shadow: #111 1px 1px 2px;
+  flex-shrink: 0;
 }
 
 #console {
@@ -89,4 +95,76 @@ code {
 
 .visible {
   display: block;
+}
+
+/* Media Queries for Responsive Design */
+
+/* Tablet Devices (768px and below) */
+@media (max-width: 768px) {
+  :root {
+    --width: 300px;
+  }
+
+  h1 {
+    font-size: 40px;
+  }
+
+  body {
+    padding: 20px;
+  }
+
+  .container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .code-container {
+    width: 100%;
+    justify-content: center;
+  }
+
+  #card-table {
+    width: var(--width);
+    height: var(--height);
+  }
+
+  button {
+    width: 40%;
+    font-size: 14px;
+  }
+}
+
+/* Mobile Devices (480px and below) */
+@media (max-width: 480px) {
+  :root {
+    --width: 250px;
+  }
+
+  h1 {
+    font-size: 28px;
+  }
+
+  h3 {
+    font-size: 16px;
+  }
+
+  body {
+    padding: 10px;
+    width: 95%;
+  }
+
+  #card-table {
+    width: var(--width);
+    height: var(--height);
+  }
+
+  button {
+    width: 100%;
+    font-size: 12px;
+  }
+
+  .code-container {
+    flex-direction: column;
+    align-items: center;
+  }
 }
