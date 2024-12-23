@@ -1,0 +1,32 @@
+{
+  "name": "cards-js",
+  "version": "1.0.0",
+  "description": "A card game library",
+  "main": "src/cards.js",
+  "scripts": {
+    "start": "npm run build && open build/index.html",
+    "docs": "jsdoc src --destination docs",
+    "build": "npm run docs && npm run copy-files",
+    "copy-files": "mkdir -p build && cp src/cards.js html/*.html build/ && cp -r css svg img docs build/",
+    "deploy": "npm run build && gh-pages -d build"
+  },
+  "keywords": [
+    "cards",
+    "game",
+    "deck",
+    "javascript"
+  ],
+  "author": "Cabra Lat.",
+  "license": "MIT",
+  "files": [
+    "src/",
+    "img/",
+    "svg/",
+    "css/",
+    "html/"
+  ],
+  "devDependencies": {
+    "jsdoc": "^4.0.4",
+    "gh-pages": "^3.2.3"
+  }
+}
