@@ -59,15 +59,9 @@ export class Table extends HTMLElement {
     // Rescale and render all registered decks on resize
     window.addEventListener('resize', () => {
       this.decks.forEach((deck, i) => {
-        const newX = deck.owner.rescaleX(i, deck.x)
-        const newY = deck.owner.rescaleY(i, deck.y)
-
-        // Only re-render if position changes
-        if (newX !== deck.x || newY !== deck.y) {
-          deck.x = newX;
-          deck.y = newY;
-          deck.render({ force: true });
-        }
+        deck.x = deck.owner.rescaleX(i, deck.x)
+        deck.y = deck.owner.rescaleY(i, deck.y)
+        deck.render({ force: true });
       });
     });
 
@@ -323,7 +317,8 @@ export class Deck extends Array {
    * @param {boolean} [options.descending=false] - Whether to sort in descending order.
    * @returns {Deck} - The sorted deck.
    */
-  sort({ compare = CardsJS.compareBySuit, descending = false } = {} ) {
+  sort(compare = CardsJS.compareBySuit, { descending = false } = {} ) {
+
     // Factory function for ascending or descending comparison
     const comparator = (compareFn) =>
       descending
@@ -831,9 +826,9 @@ export class CardsJS extends Table {
       cardWidth: 69,
       cardHeight: 94,
       animationSpeed: 500,
-      suits: ['s', 'd', 'c', 'h'],
-      ranks: CardsJS.generateRanks(13),
-      jokers: ['rj', 'bj'],
+      suits: ['♠', '♦', '♣', '♥'],
+      ranks: ['A', ...CardsJS.generateRanks(9), 'J', 'Q', 'K'],
+      jokers: ['RJ', 'BJ'],
       suitsOrder: suits => suits,
       ranksOrder: ranks => ranks,
       filter: () => true,
@@ -855,15 +850,15 @@ export class CardsJS extends Table {
         break
       case CardsJS.EUCHRE:
         this.ranksOrder = CardsJS.acesHigh
-        this.filter = rank => rank >= 9 && rank <= 9 + 5
+        this.filter = (_,rankIndex) => rankIndex >= 9 && rankIndex <= 9 + 5
       case CardsJS.PINOCHLE:
         this.copies = 2
         break
       case CardsJS.NUMBERS:
-        this.filter = rank => rank >= 1 && rank <= 10
+        this.filter = (_,rankIndex) => rankIndex >= 1 && rankIndex <= 10
         break
       case CardsJS.FIGURES:
-        this.filter = rank => rank >= 10 && rank <= 13
+        this.filter = (_,rankIndex) => rankIndex >= 10 && rankIndex <= 13
         this.blackJoker = true
         this.redJoker = true
         break
@@ -888,8 +883,8 @@ export class CardsJS extends Table {
       })
     }
 
-    if (this.blackJoker) this.all.push(new Card('bj', 0, this))
-    if (this.redJoker)   this.all.push(new Card('rj', 0, this))
+    if (this.blackJoker) this.all.push(new Card('BJ', 0, this))
+    if (this.redJoker)   this.all.push(new Card('RJ', 0, this))
 
     // Add event listeners to all card elements
     document.querySelectorAll('.card').forEach(cardElement => {
@@ -928,7 +923,7 @@ export class CardsJS extends Table {
    */
   rescaleX(i, x) {
     const { left, right } = this.playableArea
-    const newWidth = clamp(this.width || 1, left, right);
+    const newWidth = clamp(this.width, left, right);
     const oldWidth = this.prevWidth[i] || newWidth; // Previous container width 
     this.prevWidth[i] = newWidth;
     return (x / oldWidth) * newWidth; // Scale proportionally
@@ -941,7 +936,7 @@ export class CardsJS extends Table {
    */
   rescaleY(i, y) {
     const { top, bottom } = this.playableArea
-    const newHeight = clamp(this.height || 1, bottom, top); // New container height
+    const newHeight = clamp(this.height, bottom, top); // New container height
     const oldHeight = this.prevHeight[i] || newHeight; // Previous container height
     this.prevHeight[i] = newHeight;
     return (y / oldHeight) * newHeight; // Scale proportionally
