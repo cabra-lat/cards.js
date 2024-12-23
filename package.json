@@ -8,7 +8,6 @@
     "docs": "jsdoc src --destination docs",
     "build": "npm run docs && npm run copy-files",
     "copy-files": "mkdir -p build && cp src/cards.js html/*.html build/ && cp -r css svg img docs build/",
-    "deploy": "npm run build && gh-pages -d build"
   },
   "keywords": [
     "cards",
@@ -26,7 +25,6 @@
     "html/"
   ],
   "devDependencies": {
-    "jsdoc": "^4.0.4",
-    "gh-pages": "^3.2.3"
+    "jsdoc": "^4.0.4"
   }
 }
