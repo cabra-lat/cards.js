@@ -1,4 +1,32 @@
-function clamp(number, min, max) {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: cards.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: cards.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>function clamp(number, min, max) {
   return Math.max(min, Math.min(number, max));
 }
 
@@ -191,7 +219,7 @@ export class Card extends HTMLElement {
    * @param {number} y - The Y-coordinate to move the card to.
    * @param {Object} [options] - Movement options.
    * @param {number} [options.speed=this.owner.animationSpeed] - The animation speed in milliseconds.
-   * @returns {Promise<void>} - Resolves after the movement animation completes.
+   * @returns {Promise&lt;void>} - Resolves after the movement animation completes.
    */
   moveTo (x, y, { speed = this.owner.animationSpeed } = {}) {
     return new Promise((resolve) => {
@@ -211,7 +239,7 @@ export class Card extends HTMLElement {
    * @param {number} angle - The angle in degrees to rotate the card.
    * @param {Object} [options] - Rotation options.
    * @param {number} [options.speed=this.owner.animationSpeed] - The animation speed in milliseconds.
-   * @returns {Promise<void>} - Resolves after the rotation animation completes.
+   * @returns {Promise&lt;void>} - Resolves after the rotation animation completes.
    */
   rotate (angle, { speed = this.owner.animationSpeed } = {}) {
     return new Promise((resolve) => {
@@ -362,7 +390,7 @@ export class Deck extends Array {
    * @returns {Deck} - The deck instance for method chaining.
    */
   addCards (cards) {
-    for (let i = 0; i < cards.length; i++) {
+    for (let i = 0; i &lt; cards.length; i++) {
       const card = cards[i]
       if (card.container) {
         card.container.removeCard(card)
@@ -378,7 +406,7 @@ export class Deck extends Array {
    * @returns {boolean} - True if the card was removed, false otherwise.
    */
   removeCard (card) {
-    for (let i = 0; i < this.length; i++) {
+    for (let i = 0; i &lt; this.length; i++) {
       if (this[i] === card) {
         this.splice(i, 1)
         return true
@@ -439,12 +467,12 @@ export class Deck extends Array {
    * @param {number} [options.speed] - Animation speed in milliseconds.
    * @param {boolean} [options.force=false] - Whether to force a render.
    * @param {boolean} [options.immediate=false] - Whether to render immediately.
-   * @returns {Promise<void>} - Resolves after rendering is complete.
+   * @returns {Promise&lt;void>} - Resolves after rendering is complete.
    */
   render ({ speed, force = false, immediate = force } = {}) {
     return new Promise((resolve) => {
       // Render cards
-      for (let i = 0; i < this.length; i++) {
+      for (let i = 0; i &lt; this.length; i++) {
         const card = this[i]
         card.target = this.cardPosition(i)
         const top = parseInt(card.style.top)
@@ -461,7 +489,7 @@ export class Deck extends Array {
       // Handle face-up/face-down flipping
       const me = this
       const flip = () => {
-        for (let i = 0; i < me.length; i++) {
+        for (let i = 0; i &lt; me.length; i++) {
           if (me.faceUp) {
             me[i].showCard()
           } else {
@@ -530,7 +558,7 @@ export class Deck extends Array {
    * @param {number} count - Number of cards to deal to each hand.
    * @param {Deck[]} hands - Array of hands to deal cards to.
    * @param {number} speed - Animation speed in milliseconds.
-   * @returns {Promise<void>} - Resolves after all cards are dealt.
+   * @returns {Promise&lt;void>} - Resolves after all cards are dealt.
    */
   deal(count, hands, speed) {
     return new Promise((resolve) => {
@@ -855,15 +883,15 @@ export class CardsJS extends Table {
         break
       case CardsJS.EUCHRE:
         this.ranksOrder = CardsJS.acesHigh
-        this.filter = rank => rank >= 9 && rank <= 9 + 5
+        this.filter = rank => rank >= 9 &amp;&amp; rank &lt;= 9 + 5
       case CardsJS.PINOCHLE:
         this.copies = 2
         break
       case CardsJS.NUMBERS:
-        this.filter = rank => rank >= 1 && rank <= 10
+        this.filter = rank => rank >= 1 &amp;&amp; rank &lt;= 10
         break
       case CardsJS.FIGURES:
-        this.filter = rank => rank >= 10 && rank <= 13
+        this.filter = rank => rank >= 10 &amp;&amp; rank &lt;= 13
         this.blackJoker = true
         this.redJoker = true
         break
@@ -880,7 +908,7 @@ export class CardsJS extends Table {
 
     this.all = [] // All the cards created.
 
-    for (let _ = 0; _ < this.copies; ++_) {
+    for (let _ = 0; _ &lt; this.copies; ++_) {
       this.ranks.forEach((rank,index) => {
         this.suits.forEach(suit => {
           this.all.push(new Card(suit, rank, this))
@@ -896,9 +924,9 @@ export class CardsJS extends Table {
     // Attach the mouseEvent function to each card element's click event
       cardElement.addEventListener('click', (ev) => {
         const card = ev.target;
-        if (card && card.container) {
+        if (card &amp;&amp; card.container) {
           const handler = card.container._click;
-          if (handler && typeof handler.func === 'function') {
+          if (handler &amp;&amp; typeof handler.func === 'function') {
             handler.func.call(handler.context || window, card, ev);
           }
         }
@@ -954,3 +982,26 @@ customElements.define('cards-js-deck-label', DeckLabel, { extends: 'div' });
 customElements.define('cards-js-card', Card);
 customElements.define('cards-js-table', Table);
 customElements.define('cards-js', CardsJS);
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Card.html">Card</a></li><li><a href="CardsJS.html">CardsJS</a></li><li><a href="Deck.html">Deck</a></li><li><a href="DeckLabel.html">DeckLabel</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Mon Dec 23 2024 05:51:41 GMT+0000 (Coordinated Universal Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
