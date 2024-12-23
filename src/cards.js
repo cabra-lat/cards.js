@@ -74,11 +74,11 @@ export class Table extends HTMLElement {
 
   // Getters
   getWidth = () => {
-    return this.offsetWidth;
+    return this.scrollWidth;
   }
 
   getHeight = () => {
-    return this.offsetHeight;
+    return this.scrollHeight;
   }
 
   getCenter = () => {
@@ -105,8 +105,8 @@ export class Table extends HTMLElement {
   */
   rescaleX(i, x) {
     const { left, right } = this.bounding
-    const newWidth = clamp(this.width || 1, left, right);
-    const oldWidth = this.prevWidth[i] || newWidth; // Previous container width 
+    const newWidth = clamp(this.width, left, right);
+    const oldWidth = this.prevWidth[i] || newWidth; // Previous container width
     this.prevWidth[i] = newWidth;
     return (x / oldWidth) * newWidth; // Scale proportionally
   }
@@ -119,7 +119,7 @@ export class Table extends HTMLElement {
   */
   rescaleY(i, y) {
     const { top, bottom } = this.bounding
-    const newHeight = clamp(this.height || 1, bottom, top); // New container height
+    const newHeight = clamp(this.height, bottom, top); // New container height
     const oldHeight = this.prevHeight[i] || newHeight; // Previous container height
     this.prevHeight[i] = newHeight;
     return (y / oldHeight) * newHeight; // Scale proportionally
@@ -195,7 +195,7 @@ export class Card extends HTMLElement {
       this.style.top  = y - (this.owner.cardHeight / 2)
       // Callback after animation
       setTimeout(() => {
-          this.style.transition = '' 
+          this.style.transition = ''
           resolve()
       }, speed)
     })
@@ -213,7 +213,7 @@ export class Card extends HTMLElement {
       this.style.transform = `rotate(${angle}deg)`
       // Callback after animation
       setTimeout(() => {
-          this.style.transition = '' 
+          this.style.transition = ''
           resolve()
       }, speed)
     })
@@ -284,7 +284,8 @@ export class Deck extends Array {
       type = 'pile',
       seenFrom = 'south',
       label = '',
-      sticky = 'top'
+      sticky = undefined,
+      ...options
   } = {}) {
     super()
     this.owner = owner
@@ -294,12 +295,46 @@ export class Deck extends Array {
     this.faceUp = faceUp
     this.seenFrom = seenFrom
     this.zIndexCounter = 1
+    this.events = {}
 
     this.changePerspective(seenFrom)
 
-    this.label = new DeckLabel(this, { text: label, sticky, visible: this.length > 0 } )
+    const stickyness = (sticky === undefined) ? undefined : _ => sticky
+    this.label = new DeckLabel(this, { text: label, stickyness, ...options } )
 
     this.owner.decks.push(this);
+  }
+
+  // Convenience methods for common events
+  click(func, context) {
+    this.on('click', func, context);
+  }
+
+  mousedown(func, context) {
+    this.on('mousedown', func, context);
+  }
+
+  mouseup(func, context) {
+    this.on('mouseup', func, context);
+  }
+  /**
+   * Attaches an event handler to the deck.
+   * @param {string} eventName - The name of the event (e.g., 'click', 'mousedown', 'mouseup').
+   * @param {Function} func - The function to call on the event.
+   * @param {Object} [context] - The context to bind the function to.
+   */
+  on(eventName, func, context) {
+    this.events[eventName] = context ? func.bind(context) : func;
+  }
+  /**
+   * Dispatches an event.
+   * @param {string} eventName - The name of the event to dispatch.
+   * @param {...any} args - Arguments to pass to the event handler.
+   */
+  trigger(eventName, ...args) {
+    if (typeof this.events[eventName] === 'function') {
+      this.events[eventName](...args);
+    }
   }
   /**
    * Changes the perspective of the deck.
@@ -354,16 +389,15 @@ export class Deck extends Array {
    * @param {Card} card - The card to add.
    * @returns {Deck} - The deck instance for method chaining.
    */
-  addCard (card) {
-    this.addCards([card])
-    return this;
+  addCard (card, options) {
+    return this.addCards([card], options)
   }
   /**
    * Adds multiple cards to the deck.
    * @param {Card[]} cards - Array of cards to add.
    * @returns {Deck} - The deck instance for method chaining.
    */
-  addCards (cards) {
+  addCards (cards, options) {
     for (let i = 0; i < cards.length; i++) {
       const card = cards[i]
       if (card.container) {
@@ -372,6 +406,7 @@ export class Deck extends Array {
       this.push(card)
       card.container = this
     }
+    this.render(options)
     return this
   }
   /**
@@ -403,39 +438,6 @@ export class Deck extends Array {
     return `[Deck ${this.map(({shortName}) => shortName).join(" ")}]`
   }
   /**
-   * Attaches a click event handler to the deck.
-   * @param {Function} func - The function to call on click.
-   * @param {Object} context - The context to bind the function to.
-   */
-  click (func, context) {
-    this._click = {
-      func: func,
-      context: context
-    }
-  }
-  /**
-   * Attaches a mousedown event handler to the deck.
-   * @param {Function} func - The function to call on mousedown.
-   * @param {Object} context - The context to bind the function to.
-   */
-  mousedown (func, context) {
-    this._mousedown = {
-      func: func,
-      context: context
-    }
-  }
-  /**
-   * Attaches a mouseup event handler to the deck.
-   * @param {Function} func - The function to call on mouseup.
-   * @param {Object} context - The context to bind the function to.
-   */
-  mouseup (func, context) {
-    this._mouseup = {
-      func: func,
-      context: context
-    }
-  }
-  /**
    * Renders the deck visually, positioning cards and updating styles.
    * @param {Object} [options] - Rendering options.
    * @param {number} [options.speed] - Animation speed in milliseconds.
@@ -443,11 +445,13 @@ export class Deck extends Array {
    * @param {boolean} [options.immediate=false] - Whether to render immediately.
    * @returns {Promise<void>} - Resolves after rendering is complete.
    */
-  render ({ speed, force = false, immediate = force } = {}) {
+  render ({ speed, zindex = true, force = false, immediate = force } = {}) {
     return new Promise((resolve) => {
       // Render cards
+      this.zIndexCounter = this.length
       for (let i = 0; i < this.length; i++) {
         const card = this[i]
+        if (zindex) card.setzIndex(i+1)
         card.target = this.cardPosition(i)
         const top = parseInt(card.style.top)
         const left = parseInt(card.style.left)
@@ -464,12 +468,12 @@ export class Deck extends Array {
       const me = this
       const flip = () => {
         for (let i = 0; i < me.length; i++) {
+          const card = me[i]
           if (me.faceUp) {
-            me[i].showCard()
+            card.showCard()
           } else {
-            me[i].hideCard()
+            card.hideCard()
           }
-          me[i].setzIndex(++this.zIndexCounter)
         }
 
       }
@@ -480,7 +484,7 @@ export class Deck extends Array {
       }
 
       // Update the label
-      this.label.update({ speed, visible: this.length > 0 })
+      this.label.render({ speed })
 
       if (force) {
         resolve()
@@ -548,10 +552,19 @@ export class Deck extends Array {
 
         // Deal the top card to the next hand
         const hand = hands[i % hands.length];
-        hand.addCard(this.topCard());
+        const card = this.topCard()
+        hand.addCard(card);
+
+        const getHighest = (a,b) => a.zIndexCounter > b.zIndexCounter ? a : b;
+        const highest = getHighest(this,hand)
+
+        card.setzIndex(++highest.zIndexCounter)
 
         // Render the hand and recursively deal the next card
-        hand.render({ speed }).then(dealOne)
+        hand.render({ speed, zindex: false }).then(() => {
+            card.setzIndex(++hand.zIndexCounter)
+            dealOne()
+        })
 
         i++;
       };
@@ -577,6 +590,14 @@ export class Deck extends Array {
  * @extends HTMLDivElement
  */
 class DeckLabel extends HTMLDivElement {
+
+  static placementSuggestion = (thing, area) => {
+      if (thing.x >= area.right)  return 'left'
+      if (thing.x <= area.left)   return 'right'
+      if (thing.y >= area.bottom) return 'top'
+      if (thing.y <= area.top)    return 'bottom'
+      return // do nothing
+  }
   /**
    * Creates a new DeckLabel instance.
    * @param {Object} owner - The deck this label belongs to.
@@ -585,12 +606,16 @@ class DeckLabel extends HTMLDivElement {
    * @param {string} [options.sticky='bottom'] - The alignment of the label relative to the deck ('top', 'bottom', 'left', 'right').
    * @param {boolean} [options.visible=true] - Whether the label is initially visible.
    */
-  constructor(owner, { text = '', sticky = 'bottom', visible = true } = {}) {
+  constructor(owner, {
+      text = '',
+      stickyness = () => ( DeckLabel.placementSuggestion(this, owner.owner.playableArea) ),
+      visibility = () => ( this.owner.length > 0 && this.innerText !== '')
+  } = {}) {
     super()
     this.owner = owner
     this.innerText = text
-    this.sticky = sticky
-    this.visible = visible
+    this.stickyness = stickyness
+    this.visibility = visibility
     this.classList.add('label');
     this.x = owner.x
     this.y = owner.y
@@ -612,6 +637,34 @@ class DeckLabel extends HTMLDivElement {
     if (!this.visible || text === '') this.style.display = 'none'
     this.owner.owner.appendChild(this);
   }
+
+  get sticky() {
+    return this.stickyness()
+  }
+
+  set sticky(what) {
+    this.stickyness = (what === 'function') ? what : () => what
+  }
+
+  get visible() {
+    return this.visibility()
+  }
+
+  set visible(what) {
+    this.visibility = (what === 'function') ? what : () => what
+    this.render()
+  }
+
+  get text() {
+    return this.text
+  }
+
+  set text(newText) {
+    if (newText === this.innerText) return
+    this.innerText = newText
+    this.render()
+  }
+
   /**
     * Updates the label's position, text, and visibility.
     * @param {Object} [options] - Options for updating the label.
@@ -624,10 +677,7 @@ class DeckLabel extends HTMLDivElement {
     * @param {number} [options.paddingX=10] - Horizontal padding around the label.
     * @param {number} [options.paddingY=10] - Vertical padding around the label.
     */
-  update({
-    text = null,
-    sticky = null,
-    visible = this.owner.length > 0,
+  render({
     speed = this.owner.animationSpeed,
     posX = this.x,
     posY = this.y,
@@ -635,9 +685,8 @@ class DeckLabel extends HTMLDivElement {
     paddingY = 10
   } = {}) {
 
-    if (text) this.innerText = text
-    if (sticky) this.sticky = sticky
-    if (!visible) this.style.display = 'none'
+    this.style.display = (!this.visible) ? 'none' : 'block'
+    if (!this.visible) return
 
     // Get label dimensions
     const labelWidth = this.offsetWidth;
@@ -675,10 +724,13 @@ class DeckLabel extends HTMLDivElement {
         posY = midCard.centerY - labelHeight / 2;
         break;
 
-      default:
+      case 'center':
         // Center label on the deck as a fallback
-        posX -= labelWidth / 2;
+        posX -= labelWidth / 2
         posY -= labelHeight / 2;
+        break
+      default:
+        // do nothing
     }
 
     // Position the label
@@ -700,7 +752,7 @@ class DeckLabel extends HTMLDivElement {
  * It also provides utilities for shuffling cards, comparing ranks and suits, and generating ranks and suits.
  * @class
  */
-export class CardsJS extends Table { 
+export class CardsJS extends Table {
   static STANDARD = 'standard'
   static EUCHRE   = 'euchre'
   static PINOCHLE = 'pinochle'
@@ -895,17 +947,25 @@ export class CardsJS extends Table {
     if (this.redJoker)   this.all.push(new Card('RJ', 0, this))
 
     // Add event listeners to all card elements
-    document.querySelectorAll('.card').forEach(cardElement => {
-    // Attach the mouseEvent function to each card element's click event
-      cardElement.addEventListener('click', (ev) => {
-        const card = ev.target;
-        if (card && card.container) {
-          const handler = card.container._click;
-          if (handler && typeof handler.func === 'function') {
-            handler.func.call(handler.context || window, card, ev);
+    this.all.forEach(card => {
+      const addEvent = (name) => {
+        card.addEventListener(name, (ev) => {
+          const targetCard = ev.target;
+          if (targetCard && targetCard.container) {
+            targetCard.container.trigger(name, targetCard, ev)
           }
-        }
-      })
+        })
+      }
+      // Add listeners for specified events
+      ['click',
+       'mouseover',
+       'mousemove',
+       'mousedown',
+       'mouseup',
+       'mouseenter',
+       'mouseleave',
+       'mouseout'
+      ].forEach(addEvent)
     })
 
     this.Deck = (options = {}) => new Deck(this, options)
@@ -923,36 +983,10 @@ export class CardsJS extends Table {
       right: this.getWidth() - this.cardWidth / 2,
     };
   }
-  /**
-   * Rescales the X position based on the new width (inside the playable area).
-   * @param {number} i - The index of the element to rescale.
-   * @param {number} x - The X position to rescale.
-   * @returns {number} The rescaled X position.
-   */
-  rescaleX(i, x) {
-    const { left, right } = this.playableArea
-    const newWidth = clamp(this.width, left, right);
-    const oldWidth = this.prevWidth[i] || newWidth; // Previous container width 
-    this.prevWidth[i] = newWidth;
-    return (x / oldWidth) * newWidth; // Scale proportionally
-  }
-  /**
-   * Rescales the Y position based on the new height.
-   * @param {number} i - The index of the element to rescale.
-   * @param {number} y - The Y position to rescale.
-   * @returns {number} The rescaled Y position.
-   */
-  rescaleY(i, y) {
-    const { top, bottom } = this.playableArea
-    const newHeight = clamp(this.height, bottom, top); // New container height
-    const oldHeight = this.prevHeight[i] || newHeight; // Previous container height
-    this.prevHeight[i] = newHeight;
-    return (y / oldHeight) * newHeight; // Scale proportionally
-  }
 }
 
 
-       
+
 customElements.define('cards-js-deck-label', DeckLabel, { extends: 'div' });
 customElements.define('cards-js-card', Card);
 customElements.define('cards-js-table', Table);

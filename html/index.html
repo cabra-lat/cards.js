@@ -124,8 +124,6 @@
   </p>
   </header>
 
-  <h3 id="code-label"></h3>
-
   <!-- Example Code Blocks and Card Table aligned side by side -->
   <div class="container">
 
@@ -138,160 +136,152 @@
       <button id="reset" disabled>Reset</button>
       <button id="next" disabled>Next</button>
     </div>
-
     </div>
 
     <div class="code-container">
 
-<code id="ex0" class="visible language-javascript">
-// Let's design a game based on Crazy 8's
-let config = {
-  // 13 cards, plus 2 wildcards
-  ranks: CardsJS.generateRanks(13 + 2),
-  // The suits are colors
-  suits: ['R', 'G', 'B', 'Y'],
-  // Custom artwork
-  cardsUrl: 'svg/cards_custom.svg'
-}
-</code>
+    <h3 id="code-label"></h3>
 
-<code id="ex1" class="visible language-javascript">
-// Initialize the library and create a new deck
-let cards = new CardsJS({ ...config });
+<code id="ex1" class="language-javascript">
+// Init library
+let cards = new CardsJS();
+// Create a new deck
 let deck = cards.Deck()
+// Add all cards in play
 deck.addCards(cards.all);
-deck.render({ immediate: true });
 </code>
 
 <code id="ex2" class="language-javascript">
-// Create two hands, one face-down...
-let upper = cards.Deck({
-  label: 'Upper Hand',
-  sticky: 'right',
-  y: cards.playableArea.top,
-  type: 'hand'
+// Let's create a hand, yours hand!
+let yours = cards.Deck({ // A hand is a Deck
+  type: 'hand',         // How we render
+  label: 'Your Hand',   // A nice label
+  y: cards.playableArea.bottom // Put it inside
 });
-//... and one face-up!
-let lower = cards.Deck({
-  label: 'Lower Hand',
-  sticky: 'left',
-  y: cards.playableArea.bottom,
-  faceUp: true,
-  type: 'hand',
-  seenFrom: 'right'
-});
-deck.label.update({ text: 'Main Deck' })
-deck.render()
-// Deal 5 cards to each hand
-deck.deal(5, [upper, lower], 50);
-alert('Created two hands!');
 </code>
 
 <code id="ex3" class="language-javascript">
-// Setup a click handler to draw cards from the deck
-deck.click(card => {
-  if (card === deck.topCard()) {
-    lower.addCard(deck.topCard());
-    lower.render();
-  }
+// Let's deal some cards from
+// the deck to your hand
+let speed = 100
+let nCards = 3
+deck.deal(nCards, [yours], speed)
+</code>
+
+<code id="ex3" class="language-javascript">
+// They are facedDown by default
+yours.faceUp = true // let's fix it!
+nCards = 7
+deck.deal(nCards, [yours], speed)
+</code>
+
+<code id="ex4" class="language-javascript">
+// Let's create another hand
+let theirs = cards.Deck({
+  type: 'hand',
+  label: 'Other Hand',
+  y: cards.playableArea.top
 });
-alert('Try clicking the deck now!');
+// And deal them 5 cards!
+yours.deal(5, [theirs], speed)
+</code>
+
+
+<code id="ex4" class="language-javascript">
+// Let's bind some labels
+yours.on('mouseenter', (card) => yours.label.text =  `This is ${card}`)
+yours.on('mouseleave', (card) => yours.label.text = '')
+theirs.on('mouseenter', (card) => theirs.label.text = 'Other Hand')
+theirs.on('mouseleave', (card) => theirs.label.text = '')
+deck.label.sticky = 'bottom'
+deck.on('mouseenter', (card) => deck.label.text = 'Main Deck')
+deck.on('mouseleave', (card) => deck.label.text = '')
+</code>
+
+<code id="ex8" class="language-javascript">
+// Let's shuffle back the cards
+let putBack = hand => () => hand.deal(-1, [ deck ], speed)
+let drawAgain = (n,...hands) => () => deck.shuffle().deal(n, hands, speed)
+putBack(theirs)() // Return all their cards
+  .then(putBack(yours)) // return all your cards
+  .then(drawAgain(5,yours,theirs)) // draw 5
+  .then(_ => yours.sort()) // Sort your hand
+</code>
+
+<code id="ex8" class="language-javascript">
+// We can also sort a deck !
+speed = 0.1e3
+let mulligan = hand => () => putBack(hand)().then(drawAgain(5,hand))
+mulligan(yours)()
+  .then(_ => yours.sort('suit'))
+  .then(mulligan(yours))
+  .then(_ => yours.sort('rank'))
+  .then(mulligan(yours))
+  .then(_ => yours.sort('rank-then-suit'))
+  .then(mulligan(yours))
+  .then(_ => yours.sort('suit-then-rank'))
 </code>
 
 <code id="ex4" class="language-javascript">
 // Move the deck and set up a discard pile
 deck.x -= 50;
+deck.render();
+
 let pile = cards.Deck({
   label: 'discard',
   sticky: 'top',
   faceUp: true
 });
+
 pile.x += 50;
-deck.render().then( _ => {
-    pile.addCard(deck.topCard());
-    pile.render();
-});
-</code>
-
-<code id="ex5" class="language-javascript">
-// Allow sending cards to the discard pile
-lower.click((card) => {
-  const top = pile.topCard()
-  if (!top) {
-    deck.addCard(card)
-  } else {
-    if (card.suit === top.suit ||
-        card.rank === top.rank ||
-        card.rank > 13 ) {
-      pile.addCard(card)
-    }
-  }
-  deck.render()
-  pile.render()
-});
-</code>
-
-<code id="ex6" class="language-javascript">
-Array.from([deck, upper, lower, pile]).forEach(it => {
-  // Flip it up up
-  it.faceUp = true;
-  it.label.update({ visible: false });
-  it.render();
-})
-alert('Deck flipped face-up!');
-</code>
-
-<code id="ex7" class="language-javascript">
-// Get cards back to main deck
-const speed = 200;
-upper.deal(-1, [deck], speed)
-  .then(_ => {
-    alert("Upper returned its cards")
-    return lower.deal(-1, [deck], speed)
-  })
-  .then(_ => {
-    alert("Lower returned its cards")
-    return pile.deal(-1, [deck], speed)
-  }).then(_ => {
-   deck.x += 50
-   deck.changePerspective('south')
-   deck.render()
-   alert("Returned all cards!")
-  })
-</code>
-
-<code id="ex8" class="language-javascript">
-// Shuffle the deck
-deck.shuffle();
-alert('Deck shuffled!');
+pile.addCard(deck.topCard());
+pile.render();
 </code>
 
 <code id="ex9" class="language-javascript">
-// Sort the deck
-deck.shuffle()
-    .sort(CardsJS.compareBySuit); // by suit
-alert('Deck sorted by suit!');
+// Setup a click handler to draw cards from the deck
+// Lets add some rules!
+let canPlay = (card) => {
+  const top = pile.topCard()
+  return card.suitIndex === top?.suitIndex ||
+         card.rankIndex === top?.rankIndex
+}
+let playerWon = false
+deck.click(card => {
+  if (playerWon) return
+  const ableToPlay = yours.filter(canPlay).pop()
+  if (!ableToPlay && card === deck.topCard()) {
+    deck.deal(1, [yours], speed)
+    return
+  }
+  deck.label.text = 'Able to play \n No more draws!';
+});
+
+alert('Try clicking the deck now!');
 </code>
 
-<code id="ex10" class="language-javascript">
-// Sort the deck
-deck.shuffle()
-    .sort(CardsJS.compareByRank);
-alert('Deck sorted by rank!');
+<code id="ex9" class="language-javascript">
+yours.click((card) => {
+  const playable = yours.filter(canPlay)
+  if (playable.includes(card)) {
+    pile.addCard(card)
+    yours.label.text = `Played ${card}.`
+    playerWon = yours.length === 0
+    if (playerWon)
+      alert('You won!')
+    return
+  }
+  yours.label.text = `Can't play ${card}!`
+})
 </code>
 
-<code id="ex11" class="language-javascript">
-// Sort the deck
-deck.shuffle()
-    .sort(CardsJS.compareBySuitThenRank);
-alert('Deck sorted by suit, then rank!');
+<code id="ex6" class="language-javascript">
+putBack(theirs)()
+  .then(putBack(yours))
+  .then(putBack(pile))
 </code>
 
-<code id="ex12" class="language-javascript">
-// Sort the deck
-deck.shuffle()
-    .sort(CardsJS.compareByRankThenSuit);
-alert('Deck sorted by rank, then suit!');
+<code id="ex7" class="language-javascript">
 </code>
 
 <code id="ex13" class="language-javascript">
