@@ -131,7 +131,7 @@
 
     <div class="code-container">
 
-    <cards-js id="#cards-js"> </cards-js>
+    <cards-js id="#cards-js"></cards-js>
 
     <div id="buttons">
       <button id="prev" disabled>Previous</button>
@@ -189,7 +189,7 @@ alert('Created two hands!');
 
 <code id="ex3" class="language-javascript">
 // Setup a click handler to draw cards from the deck
-deck.click((card) => {
+deck.click(card => {
   if (card === deck.topCard()) {
     lower.addCard(deck.topCard());
     lower.render();
@@ -310,9 +310,9 @@ let players = layout.map(
   })
 )
 alert("Dealing cards...")
-deck.deal(-1, players, 100,
-  () => alert("Dealt cards to players!")
-)
+deck.deal(-1, players, 100).then( _ => {
+  alert("Dealt cards to players!")
+})
 </code>
 
 <code id="console" class="visible no-highlight"></code>
