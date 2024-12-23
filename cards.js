@@ -728,7 +728,7 @@ export class CardsJS extends Table {
    * @returns {number} The result of the comparison.
    */
   static compareByRank(cardA, cardB) {
-    return cardA.rank - cardB.rank;
+    return cardA.rankIndex - cardB.rankIndex;
   }
  /**
    * Comparator function to compare cards by their suit.
