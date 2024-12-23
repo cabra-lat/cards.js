@@ -398,7 +398,7 @@
             
                 <td class="default">
                 
-                    'southEast'
+                    'south'
                 
                 </td>
             
@@ -529,7 +529,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line264">line 264</a>
+        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line258">line 258</a>
     </li></ul></dd>
     
 
@@ -704,7 +704,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line355">line 355</a>
+        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line392">line 392</a>
     </li></ul></dd>
     
 
@@ -863,7 +863,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line364">line 364</a>
+        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line400">line 400</a>
     </li></ul></dd>
     
 
@@ -1022,7 +1022,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line497">line 497</a>
+        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line503">line 503</a>
     </li></ul></dd>
     
 
@@ -1181,167 +1181,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line314">line 314</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="click"><span class="type-signature"></span>click<span class="signature">(func, context)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Attaches a click event handler to the deck.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>func</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The function to call on click.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>context</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The context to bind the function to.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line408">line 408</a>
+        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line343">line 343</a>
     </li></ul></dd>
     
 
@@ -1524,7 +1364,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line535">line 535</a>
+        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line541">line 541</a>
     </li></ul></dd>
     
 
@@ -1582,7 +1422,7 @@
     
 
     
-    <h4 class="name" id="mousedown"><span class="type-signature"></span>mousedown<span class="signature">(func, context)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="on"><span class="type-signature"></span>on<span class="signature">(eventName, func, context<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
     
 
     
@@ -1590,7 +1430,7 @@
 
 
 <div class="description">
-    Attaches a mousedown event handler to the deck.
+    Attaches an event handler to the deck.
 </div>
 
 
@@ -1614,6 +1454,8 @@
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
         
 
@@ -1622,6 +1464,37 @@
     </thead>
 
     <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>eventName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">The name of the event (e.g., 'click', 'mousedown', 'mouseup').</td>
+        </tr>
+
     
 
         <tr>
@@ -1639,10 +1512,18 @@
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
-            <td class="description last">The function to call on mousedown.</td>
+            <td class="description last">The function to call on the event.</td>
         </tr>
 
     
@@ -1661,6 +1542,16 @@
             
             </td>
 
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
             
 
             
@@ -1706,167 +1597,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line419">line 419</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    
-    <h4 class="name" id="mouseup"><span class="type-signature"></span>mouseup<span class="signature">(func, context)</span><span class="type-signature"></span></h4>
-    
-
-    
-
-
-
-<div class="description">
-    Attaches a mouseup event handler to the deck.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>func</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The function to call on mouseup.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>context</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The context to bind the function to.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line430">line 430</a>
+        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line326">line 326</a>
     </li></ul></dd>
     
 
@@ -2003,7 +1734,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line380">line 380</a>
+        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line417">line 417</a>
     </li></ul></dd>
     
 
@@ -2319,7 +2050,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line444">line 444</a>
+        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line448">line 448</a>
     </li></ul></dd>
     
 
@@ -2490,7 +2221,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line565">line 565</a>
+        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line581">line 581</a>
     </li></ul></dd>
     
 
@@ -2680,7 +2411,7 @@
             
                 <td class="default">
                 
-                    CardsJS.compareBySuit
+                    CardsJS.compareByRank
                 
                 </td>
             
@@ -2772,7 +2503,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line326">line 326</a>
+        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line355">line 355</a>
     </li></ul></dd>
     
 
@@ -2882,7 +2613,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line400">line 400</a>
+        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line437">line 437</a>
     </li></ul></dd>
     
 
@@ -2992,7 +2723,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line393">line 393</a>
+        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line430">line 430</a>
     </li></ul></dd>
     
 
@@ -3045,6 +2776,186 @@
 
 
         
+            
+
+    
+
+    
+    <h4 class="name" id="trigger"><span class="type-signature"></span>trigger<span class="signature">(eventName, &hellip;args)</span><span class="type-signature"></span></h4>
+    
+
+    
+
+
+
+<div class="description">
+    Dispatches an event.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>eventName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">The name of the event to dispatch.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>args</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">any</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                    &lt;repeatable><br>
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Arguments to pass to the event handler.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="cards.js.html">cards.js</a>, <a href="cards.js.html#line334">line 334</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
     
 
     
@@ -3066,7 +2977,7 @@
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Mon Dec 23 2024 06:53:00 GMT+0000 (Coordinated Universal Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.4</a> on Mon Dec 23 2024 21:02:37 GMT+0000 (Coordinated Universal Time)
 </footer>
 
 <script> prettyPrint(); </script>
