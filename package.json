@@ -4,9 +4,9 @@
   "description": "A card game library",
   "main": "src/cards.js",
   "scripts": {
-    "start": "npm run build && open build/index.html",
-    "docs": "jsdoc src --destination docs",
+    "start": "npm run build && npx http-server build",
     "build": "npm run docs && npm run copy-files",
+    "docs": "jsdoc src --destination docs",
     "copy-files": "mkdir -p build && cp src/cards.js html/*.html build/ && cp -r css svg img docs build/"
   },
   "keywords": [
@@ -25,6 +25,7 @@
     "html/"
   ],
   "devDependencies": {
-    "jsdoc": "^4.0.4"
+    "jsdoc": "^4.0.4",
+    "http-server": "^14.1.1"
   }
 }
