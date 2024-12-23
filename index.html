@@ -152,7 +152,7 @@ let config = {
   // The suits are colors
   suits: ['R', 'G', 'B', 'Y'],
   // Custom artwork
-  cardsUrl: 'img/cards_custom.png'
+  cardsUrl: 'svg/cards_custom.svg'
 }
 </code>
 
@@ -208,11 +208,9 @@ let pile = cards.Deck({
   faceUp: true
 });
 pile.x += 50;
-deck.render({
-  callback: () => {
+deck.render().then( _ => {
     pile.addCard(deck.topCard());
     pile.render();
-  },
 });
 </code>
 
@@ -247,18 +245,20 @@ alert('Deck flipped face-up!');
 <code id="ex7" class="language-javascript">
 // Get cards back to main deck
 const speed = 200;
-upper.deal(-1, [deck], speed, () => {
-  alert("Upper returned its cards")
-  lower.deal(-1, [deck], speed, () => {
-    alert("Lower returned its cards")
-    pile.deal(-1, [deck], speed, () => {
-      deck.x += 50
-      deck.changePerspective('south')
-      deck.render()
-      alert("Returned all cards!")
-    })
+upper.deal(-1, [deck], speed)
+  .then(_ => {
+    alert("Upper returned its cards")
+    return lower.deal(-1, [deck], speed)
   })
-})
+  .then(_ => {
+    alert("Lower returned its cards")
+    return pile.deal(-1, [deck], speed)
+  }).then(_ => {
+   deck.x += 50
+   deck.changePerspective('south')
+   deck.render()
+   alert("Returned all cards!")
+  })
 </code>
 
 <code id="ex8" class="language-javascript">

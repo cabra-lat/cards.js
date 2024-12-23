@@ -26,7 +26,6 @@ export class Table extends HTMLElement {
 
   constructor(selector) {
     super();
-
     // Get the table element by selector
     this.id = selector;
     // Find and bind the DOM element
@@ -41,12 +40,26 @@ export class Table extends HTMLElement {
     if (window.getComputedStyle(this).position === 'static') {
       this.style.position = 'relative';
     }
+    // Array to hold all decks/containers
+    this.decks = [];
+    this.prevWidth = {}
+    this.prevHeight = {}
 
-    // Bind the resize event
-    window.addEventListener('resize', () => this.updateGeometry());
+    // Rescale and render all registered decks on resize
+    window.addEventListener('resize', () => {
+      this.decks.forEach((deck, i) => {
+        const newX = deck.owner.rescaleX(i, deck.x);
+        const newY = deck.owner.rescaleY(i, deck.y);
 
-    // Initialize geometry
-    this.calculateGeometry();
+        // Only re-render if position changes
+        if (newX !== deck.x || newY !== deck.y) {
+          deck.x = newX;
+          deck.y = newY;
+          deck.render({ force: true });
+        }
+      });
+    });
+
   }
 
   get width () { return this.getWidth() }
@@ -79,40 +92,18 @@ export class Table extends HTMLElement {
     };
   }
 
-  // Update geometry if the size changes
-  updateGeometry = () => {
-    const lastWidth = this.lastWidth || 0;
-    const lastHeight = this.lastHeight || 0;
-
-    if (lastWidth === this.getWidth() && lastHeight === this.getHeight()) {
-      return false; // No change in size
-    }
-
-    this.calculateGeometry();
-    return true;
+  rescaleX(i, currentX) {
+    const newWidth = this.width; // New container width
+    const oldWidth = this.prevWidth[i] || newWidth; // Previous container width 
+    this.prevWidth[i] = newWidth;
+    return (currentX / oldWidth) * newWidth; // Scale proportionally
   }
 
-  // Recalculate the geometry
-  calculateGeometry = () => {
-    this.lastWidth = this.getWidth();
-    this.lastHeight = this.getHeight();
-  }
-
-  // Utility functions for relative dimensions
-  relativeToWidth = (x) => {
-    return x / this.getWidth() * 100;
-  }
-
-  relativeToHeight = (y) => {
-    return y / this.getHeight() * 100;
-  }
-
-  absoluteToWidth = (x) => {
-    return Math.round(x * this.getWidth() / 100);
-  }
-
-  absoluteToHeight = (y) => {
-    return Math.round(y * this.getHeight() / 100);
+  rescaleY(i, currentY) {
+    const newHeight = this.height; // New container height
+    const oldHeight = this.prevHeight[i] || newHeight; // Previous container height
+    this.prevHeight[i] = newHeight;
+    return (currentY / oldHeight) * newHeight; // Scale proportionally
   }
 }
 
@@ -138,6 +129,8 @@ export class Card extends HTMLElement {
       height: `${this.owner.cardHeight}px`,
       backgroundImage: `url(${this.owner.cardsUrl})`,
       position: 'absolute',
+      top: "0%",
+      left: "0%",
       cursor: 'pointer',
       userSelect: 'none',
       userDrag: 'none'
@@ -218,6 +211,8 @@ export class Deck extends Array {
     this.changePerspective(seenFrom)
 
     this.label = new DeckLabel(this, { text: label, sticky } )
+
+    this.owner.decks.push(this);
   }
 
   changePerspective(newPerspective) {
@@ -284,7 +279,7 @@ export class Deck extends Array {
   }
 
   toString () {
-    return `[Container ${this.map(({shortName}) => shortName).join(" ")}]`
+    return `[Deck ${this.map(({shortName}) => shortName).join(" ")}]`
   }
 
   click (func, context) {
@@ -308,51 +303,53 @@ export class Deck extends Array {
     }
   }
 
-  render ({ speed, immediate = false, callback = null } = {}) {
-
-    for (let i = 0; i < this.length; i++)
-
-    // Render cards
-    for (let i = 0; i < this.length; i++) {
-      const card = this[i]
-      card.target = this.cardPosition(i)
-      this.zIndexCounter++
-      card.setzIndex(this.zIndexCounter)
-      const top = parseInt(card.style.top)
-      const left = parseInt(card.style.left)
-      if (top !== card.target.top || left !== card.target.left) {
-        if (!immediate) {
-          card.style.transition = `top ${speed}ms, left ${speed}ms`
-        }
-        card.style.top = `${card.target.top}px`
-        card.style.left = `${card.target.left}px`
-      }
-    }
-
-    // Handle face-up/face-down flipping
-    const me = this
-    const flip = () => {
-      for (let i = 0; i < me.length; i++) {
-        if (me.faceUp) {
-          me[i].showCard()
-        } else {
-          me[i].hideCard()
+  render ({ speed, force = false, immediate = force } = {}) {
+    return new Promise((resolve) => {
+      // Render cards
+      for (let i = 0; i < this.length; i++) {
+        const card = this[i]
+        card.target = this.cardPosition(i)
+        const top = parseInt(card.style.top)
+        const left = parseInt(card.style.left)
+        if (top !== card.target.top || left !== card.target.left || force ) {
+          if (!immediate) {
+            card.style.transition = `top ${speed}ms, left ${speed}ms`
+          }
+          card.style.top = `${card.target.top}px`
+          card.style.left = `${card.target.left}px`
         }
       }
-    }
-    if (immediate) {
-      flip()
-    } else {
-      setTimeout(flip, speed / 2)
-    }
 
-    // Update the label
-    this.label.update({ speed })
+      // Handle face-up/face-down flipping
+      const me = this
+      const flip = () => {
+        for (let i = 0; i < me.length; i++) {
+          if (me.faceUp) {
+            me[i].showCard()
+          } else {
+            me[i].hideCard()
+          }
+          me[i].setzIndex(++this.zIndexCounter)
+        }
 
-    // Callback after animation
-    if (callback) {
-      setTimeout(callback, speed)
-    }
+      }
+      if (immediate) {
+        flip()
+      } else {
+        setTimeout(flip, speed / 2)
+      }
+
+      // Update the label
+      this.label.update({ speed })
+
+      if (force) {
+        resolve()
+        return
+      }
+
+      // Callback after animation
+      setTimeout(resolve, speed)
+    })
   }
 
   cardPosition (cardIndex) {
@@ -387,27 +384,30 @@ export class Deck extends Array {
     return { top, left, bottom, right, centerX, centerY }
   }
 
-  deal (count, hands, speed, callback) {
-    const me = this
-    let i = 0
-    const totalCount = count * hands.length
+  deal(count, hands, speed) {
+    return new Promise((resolve) => {
+      const totalCount = count * hands.length;
+      let i = 0;
 
-    const dealOne = () => {
-      if (me.length === 0 || i === totalCount) {
-        if (callback) {
-          callback()
+      const dealOne = () => {
+        if (this.length === 0 || i === totalCount) {
+          resolve(); // Resolve the promise when all cards are dealt
+          return;
         }
-        return
-      }
-      hands[i % hands.length].addCard(me.topCard())
-      hands[i % hands.length].render({
-        callback: dealOne,
-        speed: speed,
-      })
-      i++
-    }
-    dealOne()
-    return this;
+
+        // Deal the top card to the next hand
+        const hand = hands[i % hands.length];
+        hand.addCard(this.topCard());
+
+        // Render the hand and recursively deal the next card
+        hand.render({ speed }).then(dealOne)
+
+        i++;
+      };
+
+      // Start the dealing process
+      dealOne();
+    });
   }
   
   shuffle (options) {
