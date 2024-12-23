@@ -1,3 +1,7 @@
+function clamp(number, min, max) {
+  return Math.max(min, Math.min(number, max));
+}
+
 export class Table extends HTMLElement {
   static roundLayout(decks, { x = 0,
                               y = 0,
@@ -48,8 +52,8 @@ export class Table extends HTMLElement {
     // Rescale and render all registered decks on resize
     window.addEventListener('resize', () => {
       this.decks.forEach((deck, i) => {
-        const newX = deck.owner.rescaleX(i, deck.x);
-        const newY = deck.owner.rescaleY(i, deck.y);
+        const newX = deck.owner.rescaleX(i, deck.x)
+        const newY = deck.owner.rescaleY(i, deck.y)
 
         // Only re-render if position changes
         if (newX !== deck.x || newY !== deck.y) {
@@ -92,18 +96,20 @@ export class Table extends HTMLElement {
     };
   }
 
-  rescaleX(i, currentX) {
-    const newWidth = this.width; // New container width
+  rescaleX(i, x) {
+    const { left, right } = this.bounding
+    const newWidth = clamp(this.width || 1, left, right);
     const oldWidth = this.prevWidth[i] || newWidth; // Previous container width 
     this.prevWidth[i] = newWidth;
-    return (currentX / oldWidth) * newWidth; // Scale proportionally
+    return (x / oldWidth) * newWidth; // Scale proportionally
   }
 
-  rescaleY(i, currentY) {
-    const newHeight = this.height; // New container height
+  rescaleY(i, y) {
+    const { top, bottom } = this.bounding
+    const newHeight = clamp(this.height || 1, bottom, top); // New container height
     const oldHeight = this.prevHeight[i] || newHeight; // Previous container height
     this.prevHeight[i] = newHeight;
-    return (currentY / oldHeight) * newHeight; // Scale proportionally
+    return (y / oldHeight) * newHeight; // Scale proportionally
   }
 }
 
@@ -147,20 +153,30 @@ export class Card extends HTMLElement {
     return this.name
   }
 
-  moveTo (x, y, { speed = this.owner.animationSpeed, callback = null } = {}) {
-    // Apply CSS transition for smooth movement
-    this.style.transition = `top ${speed}ms, left ${speed}ms`
-    this.style.left = x - (this.owner.cardWidth  / 2)
-    this.style.top  = y - (this.owner.cardHeight / 2)
-    if (calllback) setTimeout(() => { calllback(); this.style.transition = '' }, speed)
-    return this
+  moveTo (x, y, { speed = this.owner.animationSpeed } = {}) {
+    return new Promise((resolve) => {
+      // Apply CSS transition for smooth movement
+      this.style.transition = `top ${speed}ms, left ${speed}ms`
+      this.style.left = x - (this.owner.cardWidth  / 2)
+      this.style.top  = y - (this.owner.cardHeight / 2)
+      // Callback after animation
+      setTimeout(() => {
+          this.style.transition = '' 
+          resolve()
+      }, speed)
+    })
   }
 
-  rotate (angle, { speed = this.owner.animationSpeed, callback = null } = {}) {
-    this.style.transition = `transform ${speed}ms`
-    this.style.transform = `rotate(${angle}deg)`
-    if (callback) setTimeout(() => { callback(); this.style.transition = '' }, speed)
-    return this
+  rotate (angle, { speed = this.owner.animationSpeed } = {}) {
+    return new Promise((resolve) => {
+      this.style.transition = `transform ${speed}ms`
+      this.style.transform = `rotate(${angle}deg)`
+      // Callback after animation
+      setTimeout(() => {
+          this.style.transition = '' 
+          resolve()
+      }, speed)
+    })
   }
 
   showCard () {
@@ -693,6 +709,22 @@ export class CardsJS extends Table {
       left: this.cardWidth / 2,
       right: this.getWidth() - this.cardWidth / 2,
     };
+  }
+
+  rescaleX(i, x) {
+    const { left, right } = this.playableArea
+    const newWidth = clamp(this.width || 1, left, right);
+    const oldWidth = this.prevWidth[i] || newWidth; // Previous container width 
+    this.prevWidth[i] = newWidth;
+    return (x / oldWidth) * newWidth; // Scale proportionally
+  }
+
+  rescaleY(i, y) {
+    const { top, bottom } = this.playableArea
+    const newHeight = clamp(this.height || 1, bottom, top); // New container height
+    const oldHeight = this.prevHeight[i] || newHeight; // Previous container height
+    this.prevHeight[i] = newHeight;
+    return (y / oldHeight) * newHeight; // Scale proportionally
   }
 }
 
