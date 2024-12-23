@@ -36,18 +36,47 @@ body {
   flex-wrap: wrap;
 }
 
-h1 {
-  font-size: 60px;
-  text-align: center;
-  margin: 0 0 10px;
+header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center; /* Align items vertically */
+  justify-content: space-between; /* Distribute space between elements */
+  gap: 1rem; /* Add spacing between items */
+  padding: 1rem; /* Add padding around the header */
 }
 
-h3 {
+header h1 {
+  text-align: center;
+  font-size: 2rem;
+  flex-basis: 100%; /* Ensure the title takes full width on smaller screens */
+  margin: 0;
+}
+
+header h3 {
+  text-align: center;
+  flex-basis: 100%;
+  font-size: 1.2rem;
+  margin: 0.5rem 0;
+}
+
+header p {
+  margin: 0.5rem 0;
+  flex-basis: 100%;
+}
+
+#links {
   text-align: center;
 }
 
-p {
-  line-height: 1.5;
+header a {
+  text-decoration: none;
+  color: #007acc; /* Link color */
+  font-weight: bold;
+  margin: 0 0.5rem;
+}
+
+header a:hover {
+  text-decoration: underline; /* Add underline on hover */
 }
 
 #buttons {
