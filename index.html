@@ -246,6 +246,11 @@ let canPlay = (card) => {
   return card.suitIndex === top?.suitIndex ||
          card.rankIndex === top?.rankIndex
 }
+yours.on('mouseenter', card => {
+ canPlay(card)
+  ? yours.label.text = `You can play ${card}`
+  : yours.label.text = `This is ${card}`
+})
 let playerWon = false
 deck.click(card => {
   if (playerWon) return
@@ -279,9 +284,6 @@ yours.click((card) => {
 putBack(theirs)()
   .then(putBack(yours))
   .then(putBack(pile))
-</code>
-
-<code id="ex7" class="language-javascript">
 </code>
 
 <code id="ex13" class="language-javascript">
