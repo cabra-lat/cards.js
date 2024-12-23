@@ -635,7 +635,7 @@ class DeckLabel extends HTMLDivElement {
   }
 
   get text() {
-    return this.text
+    return this.innerText
   }
 
   set text(newText) {
