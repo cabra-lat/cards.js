@@ -142,11 +142,11 @@ export class Card extends HTMLElement {
     super()
 
     this.owner = owner
-    this.shortName = suit + rank
     this.suit = suit
     this.rank = rank
     this.rankIndex = owner.ranks.indexOf(this.rank)
     this.suitIndex = owner.suitsAndJokers.indexOf(this.suit)
+    this.shortName = suit + rank
     this.name = suit.toUpperCase() + rank
     this.faceUp = false
 
@@ -272,7 +272,7 @@ export class Deck extends Array {
    * @param {number} [options.y=center.y] - Y-coordinate of the deck.
    * @param {boolean} [options.faceUp=false] - Whether the deck is face-up.
    * @param {string} [options.type='pile'] - Type of the deck (e.g., hand, column, pile).
-   * @param {string} [options.seenFrom='southEast'] - Perspective from which the deck is viewed.
+   * @param {string} [options.seenFrom='south'] - Perspective from which the deck is viewed.
    * @param {string} [options.label=''] - Label for the deck.
    * @param {string} [options.sticky='bottom'] - Sticky position of the deck label.
    */
@@ -282,9 +282,9 @@ export class Deck extends Array {
       y = center.y,
       faceUp = false,
       type = 'pile',
-      seenFrom = 'southEast',
+      seenFrom = 'south',
       label = '',
-      sticky = 'bottom'
+      sticky = 'top'
   } = {}) {
     super()
     this.owner = owner
@@ -297,7 +297,7 @@ export class Deck extends Array {
 
     this.changePerspective(seenFrom)
 
-    this.label = new DeckLabel(this, { text: label, sticky } )
+    this.label = new DeckLabel(this, { text: label, sticky, visible: this.length > 0 } )
 
     this.owner.decks.push(this);
   }
@@ -313,34 +313,41 @@ export class Deck extends Array {
   /**
    * Sorts the cards in the deck.
    * @param {Object} [options] - Sorting options.
-   * @param {Function|string} [options.compare=CardsJS.compareBySuit] - Comparison function or sorting type ('suit', 'rank', etc.).
+   * @param {Function|string} [options.compare=CardsJS.compareByRank] - Comparison function or sorting type ('suit', 'rank', etc.).
    * @param {boolean} [options.descending=false] - Whether to sort in descending order.
    * @returns {Deck} - The sorted deck.
    */
-  sort(compare = CardsJS.compareBySuit, { descending = false } = {} ) {
+  sort(compare = CardsJS.compareByRank, { descending = false } = {} ) {
 
     // Factory function for ascending or descending comparison
-    const comparator = (compareFn) =>
+    const order = (compareFn) =>
       descending
         ? (a, b) => compareFn(b, a) // Reverse order for descending
         : (a, b) => compareFn(a, b); // Default order
 
-    let sorted = null
+    let comparator
+
     // Choose the appropriate comparator
     switch (compare) {
       case 'suit':
-        sorted = super.sort(comparator(CardsJS.compareBySuit));
+        comparator = order(CardsJS.compareBySuit)
+        break
       case 'rank':
-        sorted = super.sort(comparator(CardsJS.compareByRank));
+        comparator = order(CardsJS.compareByRank)
+        break
       case 'suit-then-rank':
-        sorted = super.sort(comparator(CardsJS.compareBySuitThenRank));
+        comparator = order(CardsJS.compareBySuitThenRank)
+        break
       case 'rank-then-suit':
-        sorted = super.sort(comparator(CardsJS.compareByRankThenSuit));
+        comparator = order(CardsJS.compareByRankThenSuit)
+        break
       default:
-        sorted = super.sort(comparator(compare));
+        if (typeof compare !== 'function') throw new Error(`Invalid option ${compare}`)
+        comparator = order(compare)
     }
+    super.sort(comparator);
     this.render()
-    return sorted
+    return this
   }
   /**
    * Adds a single card to the deck.
@@ -473,7 +480,7 @@ export class Deck extends Array {
       }
 
       // Update the label
-      this.label.update({ speed })
+      this.label.update({ speed, visible: this.length > 0 })
 
       if (force) {
         resolve()
@@ -534,7 +541,8 @@ export class Deck extends Array {
 
       const dealOne = () => {
         if (this.length === 0 || i === totalCount) {
-          resolve(); // Resolve the promise when all cards are dealt
+          // Resolve the promise when all cards are dealt and the origin is rendered
+          this.render({ speed }).then(resolve)
           return;
         }
 
@@ -619,7 +627,7 @@ class DeckLabel extends HTMLDivElement {
   update({
     text = null,
     sticky = null,
-    visible = true,
+    visible = this.owner.length > 0,
     speed = this.owner.animationSpeed,
     posX = this.x,
     posY = this.y,
@@ -814,8 +822,8 @@ export class CardsJS extends Table {
    */
   static padding = {
     pile:   ({ X, Y }) => ({ horizontal: +1 * X, vertical:   +1 * Y }),
-    column: ({ X, Y }) => ({ horizontal:      0, vertical: 24.5 * Y }), // Only Y is relevant
-    hand:   ({ X, Y }) => ({ horizontal: 18 * X, vertical: 0        }), // Only X is relevant
+    column: ({ X, Y }) => ({ vertical: 24.5 * ( Y || -X ), horizontal: 0 }),
+    hand:   ({ X, Y }) => ({ horizontal: 18 * ( X || -Y ), vertical:   0 }),
   }
   /**
    * Initializes a new CardsJS instance with the provided options.
@@ -826,15 +834,15 @@ export class CardsJS extends Table {
       cardWidth: 69,
       cardHeight: 94,
       animationSpeed: 500,
-      suits: ['♠', '♦', '♣', '♥'],
-      ranks: ['A', ...CardsJS.generateRanks(9), 'J', 'Q', 'K'],
+      suits: ['♣', '♦', '♥', '♠'],
+      ranks: ['A', 2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K'],
       jokers: ['RJ', 'BJ'],
       suitsOrder: suits => suits,
       ranksOrder: ranks => ranks,
       filter: () => true,
       copies: 1,
       cardback: 'red',
-      cardsUrl: 'img/cards.png',
+      cardsUrl: 'svg/cards.svg',
       table: 'cards-js',
       ...(proxy || {})
     }) {
@@ -850,15 +858,15 @@ export class CardsJS extends Table {
         break
       case CardsJS.EUCHRE:
         this.ranksOrder = CardsJS.acesHigh
-        this.filter = (_,rankIndex) => rankIndex >= 9 && rankIndex <= 9 + 5
+        this.filter = (rank,index) => index >= 9 - 1 && ndex <= 9 + 5 - 1
       case CardsJS.PINOCHLE:
         this.copies = 2
         break
       case CardsJS.NUMBERS:
-        this.filter = (_,rankIndex) => rankIndex >= 1 && rankIndex <= 10
+        this.filter = (rank,index) => index >= 1 - 1 && index <= 10 - 1
         break
       case CardsJS.FIGURES:
-        this.filter = (_,rankIndex) => rankIndex >= 10 && rankIndex <= 13
+        this.filter = (rank,index) => index >= 10 - 1 && index <= 13 - 1
         this.blackJoker = true
         this.redJoker = true
         break
