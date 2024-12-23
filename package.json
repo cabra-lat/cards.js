@@ -7,7 +7,7 @@
     "start": "npm run build && open build/index.html",
     "docs": "jsdoc src --destination docs",
     "build": "npm run docs && npm run copy-files",
-    "copy-files": "mkdir -p build && cp src/cards.js html/*.html build/ && cp -r css svg img docs build/",
+    "copy-files": "mkdir -p build && cp src/cards.js html/*.html build/ && cp -r css svg img docs build/"
   },
   "keywords": [
     "cards",
