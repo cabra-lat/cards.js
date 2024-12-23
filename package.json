@@ -1,5 +1,5 @@
 {
-  "name": "cards-js",
+  "name": "@cabra-lat/cards-js",
   "version": "1.0.0",
   "description": "A card game library",
   "main": "src/cards.js",
@@ -8,6 +8,13 @@
     "build": "npm run docs && npm run copy-files",
     "docs": "jsdoc src --destination docs",
     "copy-files": "mkdir -p build && cp src/cards.js html/*.html build/ && cp -r css svg img docs build/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cabra-lat/cards.js.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
   },
   "keywords": [
     "cards",

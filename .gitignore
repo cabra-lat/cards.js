@@ -1,0 +1,6 @@
+tests/
+build/
+docs/
+.git/
+node_modules/
+*.log
