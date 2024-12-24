@@ -7,7 +7,7 @@
     "start": "npm run build && npx http-server build",
     "build": "npm run docs && npm run copy-files",
     "docs": "jsdoc src --destination docs",
-    "copy-files": "mkdir -p build && cp src/*.js html/*.html build/ && cp -r css svg img docs build/"
+    "copy-files": "mkdir -p build && rsync -a css svg img html/* src/* docs build"
   },
   "repository": {
     "type": "git",
