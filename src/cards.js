@@ -182,13 +182,17 @@ export class Card extends HTMLElement {
   /**
    * Rotates the card to a specified angle with animation.
    * @param {number} angle - The angle in degrees to rotate the card.
+   * @param {Object} [origin] - Rotation origin.
+   * @param {Object} [origin.x='center'] - Rotation x origin.
+   * @param {Object} [origin.y='center'] - Rotation y origin.
    * @param {Object} [options] - Rotation options.
    * @param {number} [options.speed=this.owner.animationSpeed] - The animation speed in milliseconds.
    * @returns {Promise<void>} - Resolves after the rotation animation completes.
    */
-  rotate (angle, { speed = this.owner.animationSpeed } = {}) {
+  rotate (angle, origin = { x: 'center', y: 'center' }, { speed = this.owner.animationSpeed } = {}) {
     return new Promise((resolve) => {
       this.style.transition = `transform ${speed}ms`
+      this.style["transform-origin"] = `${origin.x} ${origin.y}`
       this.style.transform = `rotate(${angle}deg)`
       // Callback after animation
       setTimeout(() => {
