@@ -610,6 +610,7 @@ class DeckLabel extends HTMLDivElement {
       backgroundColor: 'rgba(0, 0, 0, 0.5)',
       padding: '4px',
       borderRadius: '4px',
+      "text-wrap": 'nowrap',
       zIndex: 99999,
     });
 
