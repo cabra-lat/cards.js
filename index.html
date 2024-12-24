@@ -257,9 +257,9 @@ yours.on('mouseenter', card => {
   ? yours.label.text = `You can play ${card}`
   : yours.label.text = `This is ${card}`
 })
-let playerWon = false
+let gameOver = false
 deck.click(card => {
-  if (playerWon) return
+  if (gameOver) return
   const ableToPlay = yours.filter(canPlay).pop()
   if (!ableToPlay && card === deck.topCard()) {
     deck.deal(1, [yours], speed)
@@ -277,9 +277,11 @@ yours.click((card) => {
   if (playable.includes(card)) {
     pile.addCard(card)
     yours.label.text = `Played ${card}.`
-    playerWon = yours.length === 0
-    if (playerWon)
-      alert('You won!')
+    const gameWon = yours.length === 0
+    const gameLost = !playable && deck.length === 0
+    if (gameWon)  alert('You Won!')
+    if (gameLost) alert('You Lost!')
+    gameOver = gameWon || gameLost
     return
   }
   yours.label.text = `Can't play ${card}!`
