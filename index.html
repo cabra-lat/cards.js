@@ -1,40 +1,102 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>cards.js - Write card games in Javascript</title>
-    <link rel="stylesheet" href="css/index.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
-<script>
-    hljs.configure({ cssSelector: 'code' })
-    hljs.highlightAll();
-</script>
-  </head>
+    <head>
+        <title>cards.js - Write card games in Javascript</title>
+        <link rel="stylesheet" href="css/index.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+    </head>
 
-  <script type="module">
+
+    <header>
+        <h1>Cards.js</h1>
+        <h3>The easiest way to write card games in JavaScript</h3>
+        <p>
+        Cards.js is a library to create visually appealing card games in JavaScript. It's not a framework;
+        instead, it focuses on rendering playing cards, animating them, and providing a simple interface for your games.
+        </p>
+        <p id="links">
+        <a href="./docs/index.html" target="_blank" rel="noopener noreferrer" aria-label="Read the Cards.js documentation">Docs</a>
+        |
+        <a href="https://github.com/cabra-lat/cards.js" target="_blank" rel="noopener noreferrer" aria-label="Visit the Cards.js GitHub repository">Repo</a>
+        </p>
+    </header>
+
+    <!-- Example Code Blocks and Card Table aligned side by side -->
+    <div class="container">
+        <cards-js id="#cards-js"></cards-js>
+
+         <div id="codes" class="container"></div>
+         <code id="console" class="visible no-highlight"></code>
+
+         <div id="buttons">
+             <button id="prev" disabled>Previous</button>
+             <button id="reset" disabled>Reset</button>
+             <button id="next" disabled>Next</button>
+         </div>
+
+    </div>
+
+    <script type="module">
     import { CardsJS } from './cards.js'
+    import { marked } from 'https://cdn.jsdelivr.net/npm/marked/lib/marked.esm.js'
+    // Override function
+    const renderer = {
+      heading({ tokens, depth }) {
+        const text = this.parser.parseInline(tokens)
+        const escapedText = text.toLowerCase().replace(/[^\w]+/g, '-')
+        if (depth > 2)
+            return `
+                <h${depth}>${text}</h${depth}>
+            `;
+
+        return `
+                </div>
+                <div class="code-container">
+                <h${depth}>
+                <a name="${escapedText}" class="anchor" href="#${escapedText}">
+                    <span class="header-link"></span>
+                </a>
+                ${text}
+                </h${depth}>
+                <div><!--  Place Holder --></div>
+        `
+      }
+    }
 
     class Example {
       constructor() {
-        this.codes = Array.from(document.querySelectorAll('code[id^="ex"]'))
-        this.label = document.getElementById('code-label')
-        this.console = document.getElementById('console')
-        this.examples = this.codes.length
-        this.prevButton = document.getElementById('prev')
-        this.nextButton = document.getElementById('next')
-        this.resetButton = document.getElementById('reset')
-        this.prevButton.addEventListener('click', this.prev)
-        this.nextButton.addEventListener('click', this.next)
+        fetch('./README.md')
+        .then(response => response.text())
+        .then(markdown => {
+          marked.use({ renderer })
 
-        this.stateReset()
-        this.execute()
+          // Convert markdown to HTML
+          const htmlContent = marked.parse(markdown)
+          // Insert the HTML into the content container
+          document.getElementById('codes').innerHTML = htmlContent
+          this.codes = Array.from(document.querySelectorAll('pre code'))
+          this.console = document.getElementById('console')
+          this.examples = this.codes.length
+          this.prevButton = document.getElementById('prev')
+          this.nextButton = document.getElementById('next')
+          this.resetButton = document.getElementById('reset')
+          this.prevButton.addEventListener('click', this.prev)
+          this.nextButton.addEventListener('click', this.next)
 
-        this.resetButton.addEventListener('click', () => {
-           this.table = document.querySelector('cards-js')
-           this.table.replaceChildren();
-           this.stateReset()
-           this.execute()
+          this.stateReset()
+          this.execute()
+
+          this.resetButton.addEventListener('click', () => {
+            this.table = document.querySelector('cards-js')
+            this.table.replaceChildren();
+            this.stateReset()
+            this.execute()
+          })
+          hljs.highlightAll();
+        }).catch(error => {
+           console.log(error)
         })
       }
 
@@ -43,23 +105,35 @@
          this.counter = 0
          this.maxSeen = 0
          this.ended = false
+         this.disabledNext = false 
+      }
+
+      disableNext() {
+        this.disabledNext = true
+      }
+
+      enableNext() {
+        this.disabledNext = false 
+        this.nextButton.disabled = false
       }
 
       stateChange = () => {
         // Update button states
         this.prevButton.disabled = this.counter <= 0
-        this.nextButton.disabled = this.counter === this.examples - 1
-        if (this.nextButton.disabled) this.ended = true
+        this.nextButton.disabled = this.disabledNext || this.counter === this.examples - 1
         this.resetButton.disabled = this.counter === 0
+        if (!this.disabledNext && this.nextButton.disabled) this.ended = true
 
-        // Show the current code block
-        this.codes.forEach((code) => code.classList.remove('visible'))
-        this.codes[this.counter].classList.add('visible')
+        const parentElement = element => element.parentElement.parentElement
+                           // Show the current code block
+        this.codes.forEach((code) => parentElement(code).classList.remove('visible'))
+        parentElement(this.codes[this.counter]).classList.add('visible')
         if (this.console.innerText === '')
           this.console.classList.remove('visible')
       }
 
       next = () => {
+        if (this.nextButton.disabled) return
         this.counter++
         this.maxSeen = Math.max(this.counter, this.maxSeen)
         if (!this.ended && this.counter >= this.maxSeen)
@@ -69,6 +143,7 @@
       }
 
       prev = () => {
+        if (this.prevButton.disabled) return
         this.counter--
         this.stateChange()
       }
@@ -89,7 +164,7 @@
         })
 
         let alert = (string) => {
-           this.label.innerHTML = string.replaceAll(/this\.variables\./gm,'')
+            window.alert(string.replaceAll(/this\.variables\./gm,''))
         }
 
         let show = (string) => {
@@ -105,6 +180,7 @@
           eval(code)
           this.stateChange()
         } catch (err) {
+          console.log(err.stack)
           show('Error executing code: ' + err.message + '\n' + err.stack);
           console.log(code.toString())
         }
@@ -114,209 +190,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       const example = new Example()
     });
-  </script>
-<header>
-  <h1>Cards.js</h1>
-  <h3>The easiest way to write card games in JavaScript</h3>
-  <p>
-    Cards.js is a library to create visually appealing card games in JavaScript. It's not a framework; 
-    instead, it focuses on rendering playing cards, animating them, and providing a simple interface for your games. 
-  </p>
-  <p id="links">
-    <a href="./docs/index.html" target="_blank" rel="noopener noreferrer" aria-label="Read the Cards.js documentation">Docs</a>
-    |
-    <a href="https://github.com/cabra-lat/cards.js" target="_blank" rel="noopener noreferrer" aria-label="Visit the Cards.js GitHub repository">Repo</a>
-  </p>
-</header>
+    </script>
+    </body>
+</html>
 
-
-  <!-- Example Code Blocks and Card Table aligned side by side -->
-  <div class="container">
-
-    <div class="code-container">
-
-    <cards-js id="#cards-js"></cards-js>
-
-    <div id="buttons">
-      <button id="prev" disabled>Previous</button>
-      <button id="reset" disabled>Reset</button>
-      <button id="next" disabled>Next</button>
-    </div>
-    </div>
-
-    <div class="code-container">
-
-    <h3 id="code-label"></h3>
-
-<code id="ex1" class="language-javascript">
-// Init library
-let cards = new CardsJS();
-// Create a new deck
-let deck = cards.Deck()
-// Add all cards in play
-deck.addCards(cards.all);
-</code>
-
-<code id="ex2" class="language-javascript">
-// Let's create a hand, yours hand!
-let yours = cards.Deck({ // A hand is a Deck
-  type: 'hand',         // How we render
-  label: 'Your Hand',   // A nice label
-  y: cards.playableArea.bottom // Put it inside
-});
-</code>
-
-<code id="ex3" class="language-javascript">
-// Let's deal some cards from
-// the deck to your hand
-let speed = 100
-let nCards = 3
-deck.deal(nCards, [yours], speed)
-</code>
-
-<code id="ex3" class="language-javascript">
-// They are facedDown by default
-yours.faceUp = true // let's fix it!
-nCards = 7
-deck.deal(nCards, [yours], speed)
-</code>
-
-<code id="ex4" class="language-javascript">
-// Let's create another hand
-let theirs = cards.Deck({
-  type: 'hand',
-  label: 'Other Hand',
-  y: cards.playableArea.top
-});
-// And deal them 5 cards!
-yours.deal(5, [theirs], speed)
-</code>
-
-
-<code id="ex4" class="language-javascript">
-// Let's bind some labels
-yours.on('mouseenter', (card) => yours.label.text =  `This is ${card}`)
-yours.on('mouseleave', (card) => yours.label.text = '')
-theirs.on('mouseenter', (card) => theirs.label.text = 'Other Hand')
-theirs.on('mouseleave', (card) => theirs.label.text = '')
-deck.label.sticky = 'bottom'
-deck.on('mouseenter', (card) => deck.label.text = 'Main Deck')
-deck.on('mouseleave', (card) => deck.label.text = '')
-</code>
-
-<code id="ex8" class="language-javascript">
-// Let's shuffle back the cards
-let putBack = hand => () => hand.deal(-1, [ deck ], speed)
-let drawAgain = (n,...hands) => () => deck.shuffle().deal(n, hands, speed)
-putBack(theirs)() // Return all their cards
-  .then(putBack(yours)) // return all your cards
-  .then(drawAgain(5,yours,theirs)) // draw 5
-  .then(_ => yours.sort()) // Sort your hand
-</code>
-
-<code id="ex8" class="language-javascript">
-// We can also sort a deck !
-speed = 0.1e3
-let mulligan = hand => () => putBack(hand)().then(drawAgain(5,hand))
-mulligan(yours)()
-  .then(_ => yours.sort('suit'))
-  .then(mulligan(yours))
-  .then(_ => yours.sort('rank'))
-  .then(mulligan(yours))
-  .then(_ => yours.sort('rank-then-suit'))
-  .then(mulligan(yours))
-  .then(_ => yours.sort('suit-then-rank'))
-</code>
-
-<code id="ex4" class="language-javascript">
-// Move the deck and set up a discard pile
-deck.x -= 50;
-deck.render();
-
-let pile = cards.Deck({
-  label: 'discard',
-  sticky: 'top',
-  faceUp: true
-});
-
-pile.x += 50;
-pile.addCard(deck.topCard());
-pile.render();
-</code>
-
-<code id="ex9" class="language-javascript">
-// Setup a click handler to draw cards from the deck
-// Lets add some rules!
-let canPlay = (card) => {
-  const top = pile.topCard()
-  return card.suitIndex === top?.suitIndex ||
-         card.rankIndex === top?.rankIndex
-}
-yours.on('mouseenter', card => {
- canPlay(card)
-  ? yours.label.text = `You can play ${card}`
-  : yours.label.text = `This is ${card}`
-})
-let gameOver = false
-deck.click(card => {
-  if (gameOver) return
-  const ableToPlay = yours.filter(canPlay).pop()
-  if (!ableToPlay && card === deck.topCard()) {
-    deck.deal(1, [yours], speed)
-    return
-  }
-  deck.label.text = 'Able to play \n No more draws!';
-});
-
-alert('Try clicking the deck now!');
-</code>
-
-<code id="ex9" class="language-javascript">
-yours.click((card) => {
-  const playable = yours.filter(canPlay)
-  if (playable.includes(card)) {
-    pile.addCard(card)
-    yours.label.text = `Played ${card}.`
-    const gameWon = yours.length === 0
-    const gameLost = !playable && deck.length === 0
-    if (gameWon)  alert('You Won!')
-    if (gameLost) alert('You Lost!')
-    gameOver = gameWon || gameLost
-    return
-  }
-  yours.label.text = `Can't play ${card}!`
-})
-</code>
-
-<code id="ex6" class="language-javascript">
-putBack(theirs)()
-  .then(putBack(yours))
-  .then(putBack(pile))
-</code>
-
-<code id="ex13" class="language-javascript">
-const r = 150     // radius
-let names = ['You','Alice','Bob','Charlie']
-let position = ['left','top','right','bottom']
-let perspective = ['east', 'south', 'west', 'north']
-let layout = CardsJS.roundLayout(names, { ...cards.getCenter(), radius: r })
-let players = layout.map(
-({ x, y },i) => cards.Deck({
-    x, y,
-    faceUp: i === 0,
-    label: names[i],
-    sticky: position[i],
-    seenFrom: perspective[i]
-  })
-)
-alert("Dealing cards...")
-deck.deal(-1, players, 100).then( _ => {
-  alert("Dealt cards to players!")
-})
-</code>
-
-<code id="console" class="visible no-highlight"></code>
-
-    </div>
-  </div>
-</body>
