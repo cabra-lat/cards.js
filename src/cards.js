@@ -126,7 +126,7 @@ export class Card extends HTMLElement {
     this.suitIndex = owner.suitsAndJokers.indexOf(this.suit)
     this.shortName = suit + rank
     this.name = suit.toUpperCase() + rank
-    this.faceUp = false
+    this._faceUp = false
 
     // Create the card element with initial styling
     this.classList.add('card')
@@ -151,6 +151,7 @@ export class Card extends HTMLElement {
     this.showCard()
     this.setzIndex(1)
   }
+
   /**
    * Converts the card to its string representation.
    * @returns {string} - The card's name (e.g., "H10" for 10 of hearts).
@@ -210,6 +211,7 @@ export class Card extends HTMLElement {
     const xpos = - (this.rankIndex + 1) * this.owner.cardWidth
     const ypos = - offset * this.owner.cardHeight
     this.style.backgroundPosition = `${xpos}px ${ypos}px`
+    this._faceUp = true
     return this
   }
   /**
@@ -221,6 +223,7 @@ export class Card extends HTMLElement {
           ? +0 * this.owner.cardHeight
           : -1 * this.owner.cardHeight
     this.style.backgroundPosition = `0px ${y}px`
+    this._faceUp = false
     return this
   }
   /**
@@ -231,6 +234,17 @@ export class Card extends HTMLElement {
   setzIndex(zIndex) {
     this.style.zIndex = zIndex
     return this
+  }
+
+  get faceUp() {
+    return this._faceUp;
+  }
+
+  set faceUp(option) {
+    this._faceUp = !!option;
+    (this._faceUp)
+       ? this.showCard()
+       : this.hideCard()
   }
 }
 /**
@@ -275,7 +289,7 @@ export class Deck extends Array {
     this.x = x
     this.y = y
     this.type = type
-    this.faceUp = faceUp
+    this._faceUp = faceUp
     this.seenFrom = seenFrom
     this.zIndexCounter = 1
     this.events = {}
@@ -452,7 +466,7 @@ export class Deck extends Array {
       const flip = () => {
         for (let i = 0; i < me.length; i++) {
           const card = me[i]
-          if (me.faceUp) {
+          if (me._faceUp) {
             card.showCard()
           } else {
             card.hideCard()
@@ -478,6 +492,16 @@ export class Deck extends Array {
       setTimeout(resolve, speed)
     })
   }
+
+  get faceUp() {
+    return this._faceUp;
+  }
+
+  set faceUp(option) {
+    this._faceUp = !!option;
+    this.render();
+  }
+
   /**
    * Calculates the position of a card in the deck.
    * @param {number} cardIndex - The index of the card in the deck.
