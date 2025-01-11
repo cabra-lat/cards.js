@@ -1,6 +1,6 @@
 {
   "name": "@cabra-lat/cards-js",
-  "version": "1.0.1",
+  "version": "0.3.0",
   "description": "A card game library",
   "main": "src/cards.js",
   "scripts": {
